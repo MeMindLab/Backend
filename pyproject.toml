@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "mimind"
+version = "0.1.0"
+description = "backend dependency"
+authors = ["saohwan <saohwan@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
