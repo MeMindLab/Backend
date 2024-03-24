@@ -1,13 +1,29 @@
 [tool.poetry]
-name = "mimind"
+name = "memind-api"
 version = "0.1.0"
-description = "backend dependency"
-authors = ["saohwan <saohwan@gmail.com>"]
+description = "memind-core-api"
+authors = ["Luceta <57941164+Luceta@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.11.6"
+python = "^3.11"
+fastapi = "^0.103.1"
+uvicorn = "^0.23.2"
+sqlalchemy = "^2.0.20"
+gunicorn = "^21.2.0"
+passlib = "^1.7.4"
+python-jose = "^3.3.0"
+python-dotenv = "^1.0.0"
+redis = "^5.0.1"
+sqladmin = "^0.16.1"
+
+
+[tool.poetry.group.dev.dependencies]
+httpx = "^0.24.1"
+black = "^23.9.0"
+pytest = "^7.4.2"
+pymysql = "^1.1.0"
 
 
 [build-system]

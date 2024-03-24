@@ -5,7 +5,7 @@ from app.core.modules import init_routers, make_middleware
 
 def create_app() -> FastAPI:
     app_ = FastAPI(
-        title="FastAPI starter kit",
+        title="MIMIND backend",
         description="FastAPI",
         version="1.0.0",
         # dependencies=[Depends(Logging)],
