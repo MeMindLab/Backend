@@ -23,6 +23,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
         build-essential \
+        python3-dev default-libmysqlclient-dev build-essential pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry - respects $POETRY_VERSION & $POETRY_HOME
@@ -46,6 +47,7 @@ COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 # Copying in our entrypoint
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
+
 
 WORKDIR /app
 COPY . .

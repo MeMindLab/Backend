@@ -17,7 +17,7 @@ user_module = APIRouter()
 #     return {"msg": "Auth page Initialization done"}
 
 # create new user 
-@user_module.post('/', response_model=User)
+@user_module.post('/signup', response_model=User)
 async def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = user_functions.get_user_by_email(db, user.email)
     if db_user:
