@@ -10,7 +10,7 @@ from pydantic_core import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db, oauth2_scheme
-from app.core.settings import SECRET_KEY, ALGORITHM
+from app.core.settings import SECRET_KEY, ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS
 # import
 from app.models import user as UserModel
 from app.schemas.user import UserCreate, UserUpdate
@@ -93,6 +93,17 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

@@ -28,11 +28,34 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+        # 엑세스 토큰 생성
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = user_functions.create_access_token(
         data={"id": member.id, "email": member.email, "role": member.role}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+
+    # 리프레시 토큰 생성
+    refresh_token_expires = timedelta(days=user_functions.REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token = user_functions.create_refresh_token(
+        data={"id": member.id, "email": member.email}, expires_delta=refresh_token_expires
+    )
+
+    # 토큰 만료 시간 계산 (엑세스 토큰)
+    expires_in = access_token_expires.total_seconds()
+
+    # 응답 구성
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=expires_in
+    )
+    # access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # access_token = user_functions.create_access_token(
+    #     data={"id": member.id, "email": member.email, "role": member.role}, expires_delta=access_token_expires
+    # )
+    # return Token(access_token=access_token, token_type="bearer")
 
 
 # get curren user 
