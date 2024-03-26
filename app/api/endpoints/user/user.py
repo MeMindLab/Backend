@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 # sqlalchemy
 from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
+from starlette import status
 
 # import
 from app.core.dependencies import get_db, oauth2_scheme
@@ -19,11 +21,23 @@ user_module = APIRouter()
 # create new user 
 @user_module.post('/signup', response_model=User)
 async def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = user_functions.get_user_by_email(db, user.email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="User already exists")
-    new_user = user_functions.create_new_user(db, user)
-    return new_user
+    db_user_by_email = user_functions.get_user_by_email(db, user.email)
+    db_user_by_nickname = user_functions.get_user_by_nickname(db, user.nickname)
+
+    if db_user_by_email and db_user_by_nickname:
+        detail = {"message": "Invalid nickname and email"}
+        status_code = 400
+    elif db_user_by_email:
+        detail = {"message": "Invalid Email"}
+        status_code = 400
+    elif db_user_by_nickname:
+        detail = {"message": "Invalid nickname"}
+        status_code = 400
+    else:
+        # 중복이 없는 경우 사용자 생성
+        user_functions.create_new_user(db, user)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message": "created successfully"})
+    return JSONResponse(status_code=status_code, content=detail)
 
 
 # get all user

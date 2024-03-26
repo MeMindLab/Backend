@@ -1,18 +1,19 @@
-from fastapi import HTTPException, status, Depends
-from typing import Annotated
 from datetime import datetime, timedelta, timezone
+from typing import Annotated
 
-from sqlalchemy.orm import Session
-
+from fastapi import HTTPException, status, Depends
+from jose import JWTError, jwt
 # from auth import models, schemas
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from pydantic import EmailStr
+from pydantic_core import ValidationError
+from sqlalchemy.orm import Session
 
-# import 
+from app.core.dependencies import get_db, oauth2_scheme
+from app.core.settings import SECRET_KEY, ALGORITHM
+# import
 from app.models import user as UserModel
 from app.schemas.user import UserCreate, UserUpdate
-from app.core.settings import SECRET_KEY, ALGORITHM
-from app.core.dependencies import get_db, oauth2_scheme
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -20,6 +21,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # get user by email
 def get_user_by_email(db: Session, email: str):
     return db.query(UserModel.User).filter(UserModel.User.email == email).first()
+
+
+# get user by nickname
+def get_user_by_nickname(db: Session, email: str):
+    return db.query(UserModel.User).filter(UserModel.User.nickname)
 
 
 # get user by id
