@@ -1,14 +1,14 @@
-# FastAPI Backend 
+# FastAPI Backend
 
-## Features:
+## Features
 
 - FastAPI project structure tree
 - user module
   - id, username, **email**, **password**, role, is_active, created_at, updated_at
 - admin dashboard => sqladmin
 - authentication => JWT
-- db migration => alembic 
-- CORS middleware 
+- db migration => alembic
+- CORS middleware
 
 ## Structured Tree
 
@@ -45,7 +45,7 @@
 │   │   ├── __init__.py
 │   │   └── user.py
 │   └── utils       # 다양한 기능에 걸쳐 사용되는 유틸리티 기능을 포함할 수 있습니다.
-├── requirements.txt # 프로젝트 종속성 목록.
+├── project.toml # 프로젝트 종속성 목록.
 ```
 
 **app/api/endpoints/**: 각 기능(사용자, 제품, 결제)에 대한 모듈을 포함합니다.
@@ -70,75 +70,48 @@
 
 **requirements.txt**: 프로젝트 종속성을 나열합니다.
 
+## 프로젝트 시작하기
 
 # Setup
 
-가장 먼저 할 일은 저장소를 복제하는 것입니다.
-
-```sh
-$
+```bash
+git clone https://github.com/MeMindLab/backend.git
+cd backend
 ```
 
 종속성을 설치하고 활성화할 가상 환경을 만듭니다.:
 
 ```sh
-$ 
-$ python -m venv venv
-$ source venv/bin/activate
+poetry install
+poetry shell
 ```
 
-그런 다음 종속성을 설치합니다.:
+### Requirements
 
-```sh
-# for fixed version (업데이트 예정)
-(venv)$ pip install -r requirements.txt
+- ![docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+- ![docker-compose](https://img.shields.io/badge/Docker_Compose-000000?logo=docsdotrs&logoColor=white)
 
-# or for updated version
-(venv)$ pip install -r dev.txt
+### Step 1. 서버 실행
+
+```bash
+docker-compose up -d
 ```
 
+### Step 2. DB 테이블 생성
 
-`pip` 종속성 다운로드가 완료되면 다음을 수행합니다.
-
-```sh
-# db migrations
-(venv)$ alembic upgrade head
-
-# start the server
-(venv)$ uvicorn app.main:app --reload
+```bash
+make migration_init
 ```
 
-## User module's API (삭제 예정)
+### 도커 쉘 들어가기
 
-| SRL | METHOD   | ROUTE              | FUNCTIONALITY                  | Fields                                                                                |
-| --- | -------- | ------------------ | ------------------------------ | ------------------------------------------------------------------------------------- |
-| _1_ | _POST_   | `/login`           | _Login user_                   | _**email**, **password**_                                                             |
-| _2_ | _POST_   | `/users/`          | _Create new user_              | _**email**, **password**, first name, last name_                                      |
-| _3_ | _GET_    | `/users/`          | _Get all users list_           | _email, password, first name, last name, role, is_active, created_at, updated_at, id_ |
-| _4_ | _GET_    | `/users/me/`       | _Get current user details_     | _email, password, first name, last name, role, is_active, created_at, updated_at, id_ |
-| _5_ | _GET_    | `/users/{user_id}` | _Get indivisual users details_ | _email, password, first name, last name, role, is_active, created_at, updated_at, id_ |
-| _6_ | _PATCH_  | `/users/{user_id}` | _Update the user partially_    | _email, password, is_active, role_                                                    |
-| _7_ | _DELETE_ | `/users/{user_id}` | _Delete the user_              | _None_                                                                                |
-| _8_ | _GET_    | `/`                | _Home page_                    | _None_                                                                                |
-| _9_ | _GET_    | `/admin`           | _Admin Dashboard_              | _None_                                                                                |
+```bash
+docker-compose exec -it backend /bin/bash
+poetry shell
+```
 
-# Tools
+### 테스트 실행하기
 
-### Back-end
-
-#### Language:
-
-    Python
-
-#### Frameworks:
-
-    FastAPI
-    pydantic
-
-#### Other libraries / tools:
-
-    SQLAlchemy
-    starlette
-    uvicorn
-    python-jose
-    alembic
+```bash
+pytest .
+```
