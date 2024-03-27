@@ -25,7 +25,7 @@ def get_user_by_email(db: Session, email: str):
 
 # get user by nickname
 def get_user_by_nickname(db: Session, nickname: str):
-    return db.query(UserModel.User).filter(UserModel.User.nickname == nickname )
+    return db.query(UserModel.User).filter(UserModel.User.nickname == nickname).first()
 
 
 # get user by id
