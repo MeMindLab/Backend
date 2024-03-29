@@ -3,12 +3,14 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from jose import jwt, JWTError
 # sqlalchemy
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.user import functions as user_functions
+from app.api.endpoints.user.functions import get_user_by_id, create_access_token
 from app.core.dependencies import get_db
-from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
 from app.schemas.user import User, UserLogin, Token
 
 auth_module = APIRouter()
@@ -62,3 +64,8 @@ async def login_for_access_token(
 @auth_module.get('/users/me/', response_model=User)
 async def read_current_user(current_user: Annotated[User, Depends(user_functions.get_current_user)]):
     return current_user
+
+
+@auth_module.get("/token/refresh")
+async def refresh_access_token(refresh_token: Annotated[User, Depends(user_functions.refresh_access_token)]):
+    return refresh_token

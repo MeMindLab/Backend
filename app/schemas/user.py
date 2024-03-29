@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator, Field
 from datetime import datetime
 from typing import Optional
 from app.models.user import UserRole
@@ -9,7 +9,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8)
     username: str | None = None
     nickname: str | None = None
 
@@ -43,3 +43,4 @@ class Token(BaseModel):
     token_type: str
     refresh_token: str
     expires_in: int
+
