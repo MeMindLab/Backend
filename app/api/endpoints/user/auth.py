@@ -101,7 +101,7 @@ async def refresh_access_token(refresh_request: Annotated[str, Depends(oauth2_sc
     # 새로운 토큰 정보와 함께 응답 반환
     return Token(
         access_token=access_token,
-        # refresh_token=refresh_request,  # 기존 리프레시 토큰 재사용
+        refresh_token=refresh_request,  # 기존 리프레시 토큰 재사용
         token_type="bearer",
         expires_in=expires_in
     )
