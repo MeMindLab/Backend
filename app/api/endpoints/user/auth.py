@@ -3,15 +3,12 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from jose import jwt, JWTError
 # sqlalchemy
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.user import functions as user_functions
-from app.api.endpoints.user.functions import get_user_by_id, create_access_token
 from app.core.dependencies import get_db, oauth2_scheme
-from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
-from app.models.user import TokenRefresh
+from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.schemas.user import User, UserLogin, Token
 
 auth_module = APIRouter()
