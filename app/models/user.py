@@ -1,5 +1,9 @@
-from sqlalchemy import Column, String, Enum
+from pydantic import BaseModel
+from sqlalchemy import Column, String, Enum, Integer, ForeignKey
 from enum import Enum as PythonEnum
+
+from sqlalchemy.orm import relationship
+
 from app.core.database import Base
 from .common import CommonModel
 
@@ -22,5 +26,3 @@ class User(CommonModel):
 
 
 metadata = Base.metadata
-
-

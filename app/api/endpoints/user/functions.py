@@ -1,8 +1,8 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
 from fastapi import HTTPException, status, Depends
-from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
 # from auth import models, schemas
 from passlib.context import CryptContext
@@ -13,7 +13,6 @@ from app.core.settings import SECRET_KEY, ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS, 
 # import
 from app.models import user as UserModel
 from app.schemas.user import UserCreate, UserUpdate
-import logging
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -142,29 +141,15 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotate
         raise credentials_exception
 
 
-def refresh_access_token(refresh_token: Annotated[str, Depends(oauth2_scheme)],
-                         db: Annotated[Session, Depends(get_db)]):
-
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid authentication credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def decode_jwt(token: str):
     try:
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        logging.info("Refresh token", payload)
-        current_email: str = payload.get("email")
-        if current_email is None:
-            raise credentials_exception
-        # RefreshToken의 유효성과 만료를 확인하는 추가적인 검증이 필요합니다.
-        user = get_user_by_email(db, current_email)
-        if user is None:
-            raise credentials_exception
-        # 새로운 AccessToken 생성
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user.username}, expires_delta=access_token_expires
-        )
-        return {"access_token": access_token}
+        # 토큰 디코드 및 페이로드 추출
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
     except JWTError:
-        raise credentials_exception
+        # JWTError 발생 시, 유효하지 않은 토큰으로 간주
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
