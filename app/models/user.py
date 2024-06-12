@@ -1,3 +1,5 @@
+from xmlrpc.client import Boolean
+
 from pydantic import BaseModel
 from sqlalchemy import Column, String, Enum, Integer, ForeignKey
 from enum import Enum as PythonEnum

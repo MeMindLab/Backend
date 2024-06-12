@@ -19,9 +19,11 @@ redis = "^5.0.1"
 sqladmin = "^0.16.1"
 pymysql = "^1.1.0"
 mysql = "^0.0.3"
-mysqlclient = "^2.2.4"
 alembic = "^1.13.1"
 cryptography = "^42.0.5"
+mysqlclient = "^2.2.4"
+twilio = "^9.1.1"
+phonenumbers = "^8.13.38"
 
 
 [tool.poetry.group.dev.dependencies]

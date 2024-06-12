@@ -10,6 +10,8 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    env_file:
+      - .env  # Include the .env file
     command:
       - /bin/bash
       - -c
