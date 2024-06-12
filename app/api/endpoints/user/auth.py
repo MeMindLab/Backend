@@ -1,7 +1,7 @@
 # fastapi
 import os
 import phonenumbers
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from datetime import timedelta, datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,11 +18,9 @@ from twilio.http.validation_client import ValidationClient
 from app.api.endpoints.user import functions as user_functions
 from app.core.dependencies import get_db, oauth2_scheme
 from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES
-from app.schemas.user import User, UserLogin, Token
+from app.schemas.user import User, UserLogin, Token, VerificationResult
 from app.service.auth import normalize_phone_number
 
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
 
 auth_module = APIRouter()
 
@@ -173,34 +171,10 @@ async def create_verification_code(phone: str):
         )
 
 
-class SendCodeAttempt(BaseModel):
-    time: str
-    channel: str
-    attempt_sid: str
-
-
-class TwilioVerificationCheckResponse(BaseModel):
-    sid: Optional[str]
-    service_sid: Optional[str]
-    account_sid: Optional[str]
-    to: Optional[str]
-    channel: Optional[str]
-    status: Optional[str]
-    valid: Optional[bool]
-    amount: Optional[str]
-    payee: Optional[str]
-    date_created: Optional[datetime]
-    date_updated: Optional[datetime]
-    lookup: Optional[Dict[str, Any]]
-    send_code_attempts: Optional[List[Dict[str, Any]]]
-    sna: Optional[str]
-    url: Optional[str]
-
-
 @auth_module.post(
     "/sms-verify",
     status_code=status.HTTP_200_OK,
-    response_model=TwilioVerificationCheckResponse,
+    response_model=VerificationResult,
 )
 async def verify_code(phone_number: str, code: str):
     account_sid = os.getenv("TWILIO_ACCOUNT_SID")
@@ -221,13 +195,16 @@ async def verify_code(phone_number: str, code: str):
         verification_check = verify_client.verification_checks.create(
             to=phone, code=code
         )
+        result = {
+            "to": verification_check.to,
+            "channel": verification_check.channel,
+            "status": verification_check.status,
+            "valid": verification_check.valid,
+        }
 
         return JSONResponse(
             status_code=200,
-            content={
-                "message": "Obtained verification status",
-                "status": verification_check.status,
-            },
+            content={"success": True, "data": {"result": result}},
         )
 
     except Exception as e:
