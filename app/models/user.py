@@ -1,7 +1,5 @@
-from xmlrpc.client import Boolean
-
 from pydantic import BaseModel
-from sqlalchemy import Column, String, Enum, Integer, ForeignKey
+from sqlalchemy import Column, String, Enum, Boolean
 from enum import Enum as PythonEnum
 
 from sqlalchemy.orm import relationship
@@ -22,6 +20,8 @@ class User(CommonModel):
     username = Column(String(120), nullable=True)
     nickname = Column(String(120), nullable=True)
     role = Column(Enum(UserRole), default=UserRole.user)
+    is_verified = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
 
     def __repr__(self):
         return f"{self.email}"
