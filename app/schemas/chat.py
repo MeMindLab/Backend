@@ -13,4 +13,5 @@ class ChatResult(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    is_enough: bool
     result: ChatResult

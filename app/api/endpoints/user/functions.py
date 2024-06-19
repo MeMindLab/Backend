@@ -1,20 +1,21 @@
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
 
 from fastapi import HTTPException, status, Depends
 from jose import JWTError, jwt
+
 # from auth import models, schemas
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_db, oauth2_scheme
-from app.core.settings import SECRET_KEY, ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.dependencies import get_db
+
 # import
 from app.models import user as UserModel
 from app.schemas.user import UserCreate, UserUpdate
+from app.auth import hashpassword, authenticate
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Initialize HashPassword instance
+hash_password = hashpassword.HashPassword()
 
 
 # get user by email
@@ -44,9 +45,14 @@ def validate_nickname_length(nickname: str):
 
 
 def create_new_user(db: Session, user: UserCreate):
-    hashed_password = pwd_context.hash(user.password)
-    new_user = UserModel.User(email=user.email, password=hashed_password, username=user.username,
-                              nickname=user.nickname)
+    hashed_password = hash_password.create_hash(user.password)
+
+    new_user = UserModel.User(
+        email=user.email,
+        password=hashed_password,
+        username=user.username,
+        nickname=user.nickname,
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -85,7 +91,7 @@ def delete_user(db: Session, user_id: int):
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return hash_password.verify_hash(plain_password, hashed_password)
 
 
 def authenticate_user(db: Session, user: UserCreate):
@@ -97,39 +103,17 @@ def authenticate_user(db: Session, user: UserCreate):
     return member
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-def create_refresh_token(*, data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-    # get current users info
-
-
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db)]):
+# get current users info
+def get_current_user(
+    payload=Depends(authenticate),
+    db: Session = Depends(get_db),
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # print(f"Payload =====> {payload}")
         current_email: str = payload.get("email")
         if current_email is None:
             raise credentials_exception
@@ -139,17 +123,3 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotate
         return user
     except JWTError:
         raise credentials_exception
-
-
-def decode_jwt(token: str):
-    try:
-        # 토큰 디코드 및 페이로드 추출
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        # JWTError 발생 시, 유효하지 않은 토큰으로 간주
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
