@@ -41,11 +41,20 @@ async def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
         status_code = 400
     else:
         # 중복이 없는 경우 사용자 생성
-        user_functions.create_new_user(db, user)
-        return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={"message": "created successfully"},
-        )
+        try:
+            new_user = user_functions.create_new_user(db, user)
+            print(new_user)
+            return JSONResponse(
+                status_code=status.HTTP_201_CREATED,
+                content={"message": "created successfully", "user": new_user.email},
+            )
+        except Exception as e:
+            print("exception?")
+            db.rollback()
+            raise HTTPException(
+                status_code=500, detail=f"User creation failed: {str(e)}"
+            )
+
     # 중복이나 유효성 검사 실패 시 응답
     return JSONResponse(status_code=status_code, content=detail)
 
