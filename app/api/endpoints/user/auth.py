@@ -17,9 +17,11 @@ from twilio.http.validation_client import ValidationClient
 
 from app.api.endpoints.user import functions as user_functions
 from app.core.dependencies import get_db, oauth2_scheme
-from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 from app.schemas.user import User, UserLogin, Token, VerificationResult
 from app.service.auth import normalize_phone_number
+
+from app.auth.jwt_hanlder import create_access_token, decode_token, create_refresh_token
 
 
 auth_module = APIRouter()
@@ -41,14 +43,14 @@ async def login_for_access_token(
 
         # 엑세스 토큰 생성
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = user_functions.create_access_token(
+    access_token = create_access_token(
         data={"id": member.id, "email": member.email, "role": member.role},
         expires_delta=access_token_expires,
     )
 
     # 리프레시 토큰 생성
-    refresh_token_expires = timedelta(days=user_functions.REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token = user_functions.create_refresh_token(
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token = create_refresh_token(
         data={"id": member.id, "email": member.email},
         expires_delta=refresh_token_expires,
     )
@@ -85,7 +87,7 @@ async def refresh_access_token(
 ) -> Token:
     # 리프레시 토큰 유효성 검증
     try:
-        payload = user_functions.decode_jwt(refresh_request)
+        payload = decode_token(refresh_request)
         user_id = payload.get("id")
         if user_id is None:
             raise HTTPException(
