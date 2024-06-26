@@ -24,6 +24,10 @@ cryptography = "^42.0.5"
 mysqlclient = "^2.2.4"
 twilio = "^9.1.1"
 phonenumbers = "^8.13.38"
+openai = "^1.35.4"
+langchain = "^0.2.6"
+langchain-community = "^0.2.6"
+langchain-openai = "^0.1.10"
 
 
 [tool.poetry.group.dev.dependencies]
