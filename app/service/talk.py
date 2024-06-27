@@ -15,7 +15,6 @@ class MessageRespondent:
         self.chat_instance = self.setup_chat()
 
     def setup_chat(self):
-
         openai.api_key = os.environ.get("OPENAI_API_KEY")
 
         # ChatOpenAI 설정
