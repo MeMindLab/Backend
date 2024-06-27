@@ -21,10 +21,7 @@ class User(CommonModel):
     nickname = Column(String(120), nullable=True)
     role = Column(Enum(UserRole), default=UserRole.user)
     is_verified = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
+    lemons = relationship("Lemon", back_populates="user")
 
     def __repr__(self):
         return f"{self.email}"
-
-
-metadata = Base.metadata

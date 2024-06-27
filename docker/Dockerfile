@@ -54,4 +54,4 @@ COPY . .
 
 EXPOSE 8000
 ENTRYPOINT ["/docker-entrypoint.sh"]
-#CMD ["poetry","gunicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=8000"]
+CMD ["poetry","gunicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=8000"]
