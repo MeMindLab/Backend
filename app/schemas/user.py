@@ -24,7 +24,7 @@ class User(UserBase):
     username: Optional[str]
     nickname: Optional[str]
     is_active: bool
-    role: UserRole or None
+    role: UserRole
     created_at: datetime
     updated_at: datetime
 

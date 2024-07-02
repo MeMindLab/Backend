@@ -11,8 +11,8 @@ from app.core.dependencies import get_db
 # import
 from app.models import user as UserModel
 from app.schemas.user import UserCreate, UserUpdate
-from app.auth import hashpassword, authenticate
-
+from app.auth import hashpassword, authenticate_bearer
+from app.auth.jwt_hanlder import decode_token
 
 # Initialize HashPassword instance
 hash_password = hashpassword.HashPassword()
@@ -105,15 +105,16 @@ def authenticate_user(db: Session, user: UserCreate):
 
 # get current users info
 def get_current_user(
-    payload=Depends(authenticate),
+    token: str = Depends(authenticate_bearer),
     db: Session = Depends(get_db),
-):
+) -> UserModel:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        payload = decode_token(token)
         current_email: str = payload.get("email")
         if current_email is None:
             raise credentials_exception
@@ -121,5 +122,9 @@ def get_current_user(
         if user is None:
             raise credentials_exception
         return user
-    except JWTError:
+    except JWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token"
+        )
+    except Exception as e:
         raise credentials_exception
