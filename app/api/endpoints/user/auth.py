@@ -1,11 +1,11 @@
 # fastapi
 import os
 import phonenumbers
-from fastapi.responses import JSONResponse, Response
-from datetime import timedelta, datetime
+from fastapi.responses import JSONResponse
+from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
-from dotenv import load_dotenv
+
 
 # sqlalchemy
 from sqlalchemy.orm import Session
@@ -13,10 +13,11 @@ from sqlalchemy.orm import Session
 # twilio
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
-from twilio.http.validation_client import ValidationClient
 
 from app.api.endpoints.user import functions as user_functions
-from app.core.dependencies import get_db, oauth2_scheme
+from app.core.dependencies import get_db
+from app.auth.authenticate import authenticate_bearer
+
 from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 from app.schemas.user import User, UserLogin, Token, VerificationResult
 from app.service.auth import normalize_phone_number
@@ -72,7 +73,7 @@ async def login_for_access_token(
     # return Token(access_token=access_token, token_type="bearer")
 
 
-# get curren user
+# get current user
 @auth_module.get("/users/me/", response_model=User)
 async def read_current_user(
     current_user: Annotated[User, Depends(user_functions.get_current_user)]
@@ -82,12 +83,20 @@ async def read_current_user(
 
 @auth_module.get("/token/refresh")
 async def refresh_access_token(
-    refresh_request: Annotated[str, Depends(oauth2_scheme)],
+    refresh_request: str = Depends(authenticate_bearer),
     db: Session = Depends(get_db),
 ) -> Token:
     # 리프레시 토큰 유효성 검증
     try:
         payload = decode_token(refresh_request)
+        token_type = payload.get("token_type")
+        if token_type != "refresh_token":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type. Expected refresh_token.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = payload.get("id")
         if user_id is None:
             raise HTTPException(
@@ -108,8 +117,8 @@ async def refresh_access_token(
         raise HTTPException(status_code=404, detail="User not found")
 
     # 새로운 엑세스 토큰 생성
-    access_token_expires = timedelta(minutes=user_functions.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = user_functions.create_access_token(
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
         data={"id": user.id, "email": user.email, "role": user.role},
         expires_delta=access_token_expires,
     )
