@@ -11,7 +11,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
-    username: str | None = None
     nickname: str | None = None
 
 
@@ -21,7 +20,6 @@ class UserLogin(UserBase):
 
 class User(UserBase):
     id: int
-    username: Optional[str]
     nickname: Optional[str]
     is_active: bool
     role: UserRole
@@ -30,13 +28,13 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+        response_model_exclude = {"password"}
 
 
 class UserUpdate(BaseModel):
-    username: str | None = None
     nickname: str | None = None
     is_active: bool | None = None
-    role: UserRole or None = None
+    role: UserRole | None = None
 
 
 class Token(BaseModel):

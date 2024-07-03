@@ -7,7 +7,6 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
 
 from app.core.dependencies import get_db
@@ -70,8 +69,6 @@ async def create_new_user(db: AsyncSession, user: UserCreate):
     db.commit()
     db.refresh(new_user)
     return new_user
-
-    # get all user
 
 
 # get user by nickname
