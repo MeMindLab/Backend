@@ -1,9 +1,7 @@
-import os
-from dotenv import load_dotenv
-
 # fastapi
 from fastapi import FastAPI
 from app.core.modules import init_routers, make_middleware
+from app.core.config import get_config
 
 
 def create_app() -> FastAPI:
@@ -14,16 +12,8 @@ def create_app() -> FastAPI:
         # dependencies=[Depends(Logging)],
         middleware=make_middleware(),
     )
-    init_routers(app_=app_)
+    init_routers(app_=app_, config=get_config())
     return app_
-
-
-# .env 파일 경로 설정
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-dotenv_path = os.path.join(BASE_DIR, ".env")
-
-# .env 파일 로드
-load_dotenv(dotenv_path)
 
 
 app = create_app()

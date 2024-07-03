@@ -5,6 +5,10 @@ from jose import JWTError, jwt
 
 # from auth import models, schemas
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
 
 from app.core.dependencies import get_db
 
@@ -19,13 +23,18 @@ hash_password = hashpassword.HashPassword()
 
 
 # get user by email
-def get_user_by_email(db: Session, email: str):
-    return db.query(UserModel.User).filter(UserModel.User.email == email).first()
+async def get_user_by_email(session: AsyncSession, email: str) -> UserModel.User | None:
+    query = select(UserModel.User).where(UserModel.User.email == email)
+    result = await session.execute(query)
+
+    return result.scalars().first()
 
 
 # get user by nickname
-def get_user_by_nickname(db: Session, nickname: str):
-    return db.query(UserModel.User).filter(UserModel.User.nickname == nickname).first()
+async def get_user_by_nickname(session: AsyncSession, nickname: str):
+    query = select(UserModel.User).where(UserModel.User.nickname == nickname)
+    result = await session.execute(query)
+    return result.scalars().first()
 
 
 # get user by id
@@ -44,7 +53,7 @@ def validate_nickname_length(nickname: str):
         raise HTTPException(status_code=status_code, detail=detail)
 
 
-def create_new_user(db: Session, user: UserCreate):
+async def create_new_user(db: AsyncSession, user: UserCreate):
     hashed_password = hash_password.create_hash(user.password)
 
     new_user = UserModel.User(
@@ -53,6 +62,7 @@ def create_new_user(db: Session, user: UserCreate):
         username=user.username,
         nickname=user.nickname,
     )
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -94,8 +104,8 @@ def verify_password(plain_password, hashed_password):
     return hash_password.verify_hash(plain_password, hashed_password)
 
 
-def authenticate_user(db: Session, user: UserCreate):
-    member = get_user_by_email(db, user.email)
+async def authenticate_user(db: Session, user: UserCreate):
+    member = await get_user_by_email(db, user.email)
     if not member:
         return False
     if not verify_password(user.password, member.password):

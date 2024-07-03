@@ -13,7 +13,5 @@ def authenticate_bearer(
     auth_header: HTTPAuthorizationCredentials | None = Depends(http_bearer),
 ) -> str | None:
     if auth_header is None:
-        raise HTTPException(
-            status_code=401, detail="Not Authorized 토큰없어요 beare a함수"
-        )
+        raise HTTPException(status_code=401, detail="Not Authorized")
     return auth_header.credentials

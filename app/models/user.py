@@ -21,7 +21,11 @@ class User(CommonModel):
     nickname = Column(String(120), nullable=True)
     role = Column(Enum(UserRole), default=UserRole.user)
     is_verified = Column(Boolean, default=False)
-    lemons = relationship("Lemon", back_populates="user")
+
+    lemons = relationship("Lemon", back_populates="user", uselist=False)
 
     def __repr__(self):
-        return f"{self.email}"
+        if self.lemons:
+            return f"<User(email={self.email}, nickname={self.nickname}, role={self.role.value}, is_verified={self.is_verified}, lemons={self.lemons.lemon_count})>"
+        else:
+            return f"<User(email={self.email}, nickname={self.nickname}, role={self.role.value}, is_verified={self.is_verified}, lemons=None)>"

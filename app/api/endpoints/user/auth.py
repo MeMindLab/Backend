@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 # sqlalchemy
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # twilio
 from twilio.rest import Client
@@ -32,9 +33,20 @@ auth_module = APIRouter()
 # getting access token for login
 @auth_module.post("/login", response_model=Token)
 async def login_for_access_token(
-    user: UserLogin, db: Session = Depends(get_db)
+    user: UserLogin, db: AsyncSession = Depends(get_db)
 ) -> Token:
     member = user_functions.authenticate_user(db, user=user)
+
+    if member:
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        lemons = member.lemons
+        print(f"member????:{member}")
+        print(f"lemons object?????:{lemons}")
+        # lemon_counts = [lemon.lemon_count for lemon in lemons]  # 각 레몬의 lemon_count 추출
+        # print(lemon_counts)
+
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
     if not member:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
