@@ -1,8 +1,8 @@
-"""Initial migration
+"""postgresql migration
 
-Revision ID: c9e1f7e25cfb
+Revision ID: 45f78943792c
 Revises: 
-Create Date: 2024-06-27 18:38:58.180172
+Create Date: 2024-07-03 07:11:14.172169
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "c9e1f7e25cfb"
+revision: str = "45f78943792c"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -50,7 +50,7 @@ def upgrade() -> None:
         "lemons",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("lemon_count", sa.Integer(), nullable=False),
-        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -68,6 +68,7 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id"),
     )
     op.create_index(op.f("ix_lemons_id"), "lemons", ["id"], unique=False)
     # ### end Alembic commands ###

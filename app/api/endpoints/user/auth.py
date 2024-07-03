@@ -18,8 +18,9 @@ from twilio.base.exceptions import TwilioRestException
 from app.api.endpoints.user import functions as user_functions
 from app.core.dependencies import get_db
 from app.auth.authenticate import authenticate_bearer
+from app.core.config import config
 
-from app.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+
 from app.schemas.user import User, UserLogin, Token, VerificationResult
 from app.service.auth import normalize_phone_number
 
@@ -55,14 +56,14 @@ async def login_for_access_token(
         )
 
         # 엑세스 토큰 생성
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"id": member.id, "email": member.email, "role": member.role},
         expires_delta=access_token_expires,
     )
 
     # 리프레시 토큰 생성
-    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token_expires = timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
     refresh_token = create_refresh_token(
         data={"id": member.id, "email": member.email},
         expires_delta=refresh_token_expires,

@@ -10,10 +10,11 @@ class ConfigTemplate(BaseSettings):
         env_prefix="APP_",
     )
 
-    DATABASE_USER: str = "user"
-    DATABASE_PASSWORD: str = "user1234"
-    DATABASE_HOST: str = "localhost"
-    DATABASE_PORT: int = 3306
+    DATABASE_USER: str = "dev"
+    DATABASE_PASSWORD: str = "dev1234"
+    # DATABASE_HOST: str = "localhost"
+    DATABASE_HOST: str = "memind-postgres"
+    DATABASE_PORT: int = 5432
     DATABASE_NAME: str = "dev"
 
     SECRET_KEY: str = "09027e5d4c40783326cef1ee95c179c7dcaa4c92e90844c1c1958b027546d240"
