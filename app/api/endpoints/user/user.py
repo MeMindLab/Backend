@@ -29,6 +29,8 @@ async def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
     # 데이터베이스에서 이메일과 닉네임 중복 검사
     db_user_by_email = user_functions.get_user_by_email(db, user.email)
     db_user_by_nickname = user_functions.get_user_by_nickname(db, user.nickname)
+    print(db_user_by_email)
+    print(db_user_by_nickname)
 
     if db_user_by_email and db_user_by_nickname:
         detail = {"message": "Invalid nickname and email"}

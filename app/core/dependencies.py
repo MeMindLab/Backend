@@ -1,10 +1,15 @@
-from app.core.database import SessionLocal
+from fastapi import Depends
+
+from app.core.database import SqlaEngine
+from app.core.config import ConfigTemplate, get_config
 
 
-# db connection
-def get_db():
-    db = SessionLocal()
+async def get_db(config: ConfigTemplate = Depends(get_config)):
+    session = SqlaEngine(config).session()
+
+    if session is None:
+        raise Exception("session is not connected")
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        await session.close()
