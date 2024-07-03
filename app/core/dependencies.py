@@ -10,6 +10,8 @@ async def get_db(config: ConfigTemplate = Depends(get_config)):
     if session is None:
         raise Exception("session is not connected")
     try:
+        print("herere session")
         yield session
     finally:
+        print("close session")
         await session.close()

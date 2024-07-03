@@ -11,6 +11,7 @@ from app.api.endpoints.user.functions import validate_nickname_length
 from app.core.dependencies import get_db
 from app.schemas.user import User, UserCreate, UserUpdate
 from app.api.endpoints.user import functions as user_functions
+from app.service.user import UserService
 
 user_module = APIRouter()
 
@@ -61,14 +62,39 @@ async def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
     return JSONResponse(status_code=status_code, content=detail)
 
 
+@user_module.post("/signin_for_debug")
+async def user_signin_for_debug_handler(
+    q: UserCreate,
+    user_service: UserService = Depends(),
+):
+    try:
+        username = await user_service.get_user_by_username(q.username)
+        email = await user_service.find_user_by_email(q.email)
+        print(f"username : {username}")
+        print(f"email : {email}")
+    except HTTPException:
+        print("except")
+        pass
+    else:
+        print("else")
+        raise HTTPException(status_code=400, detail="User already exists")
+
+
 # get all user
 @user_module.get(
     "/",
     response_model=list[User],
     # dependencies=[Depends(RoleChecker(['admin']))]
 )
-async def read_all_user(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return user_functions.read_all_user(db, skip, limit)
+# async def user_list_handler(
+#    skip: int = 0, limit: int = 100, user_service: UserService = Depends(),
+# ):
+async def user_list_handler(
+    user_service: UserService = Depends(),
+):
+    result = await user_service.get_user_list()
+    print(result)
+    return result
 
 
 # get user by id
@@ -78,7 +104,7 @@ async def read_all_user(skip: int = 0, limit: int = 100, db: Session = Depends(g
     # dependencies=[Depends(RoleChecker(['admin']))]
 )
 async def read_user_by_id(user_id: int, db: Session = Depends(get_db)):
-    return user_functions.get_user_by_id(db, user_id)
+    return await user_functions.get_user_by_id(db, user_id)
 
 
 # update user

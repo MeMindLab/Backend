@@ -38,11 +38,14 @@ async def get_user_by_nickname(session: AsyncSession, nickname: str):
 
 
 # get user by id
-def get_user_by_id(db: Session, user_id: int):
-    db_user = db.query(UserModel.User).filter(UserModel.User.id == user_id).first()
-    if db_user is None:
+async def get_user_by_id(session: AsyncSession, user_id: int):
+    query = select(UserModel.User).where(UserModel.User.id == user_id)
+    user = await session.execute(query)
+
+    if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+
+    return user.scalars().first()
 
 
 def validate_nickname_length(nickname: str):
@@ -71,8 +74,16 @@ async def create_new_user(db: AsyncSession, user: UserCreate):
     # get all user
 
 
-def read_all_user(db: Session, skip: int, limit: int):
-    return db.query(UserModel.User).offset(skip).limit(limit).all()
+# get user by nickname
+async def get_user_by_nickname(session: AsyncSession, nickname: str):
+    query = select(UserModel.User).where(UserModel.User.nickname == nickname)
+    result = await session.execute(query)
+    return result.scalars().first()
+
+
+async def read_all_user(session: AsyncSession, skip: int, limit: int):
+    result = await session.execute(select(UserModel.User).offset(skip).limit(limit))
+    return result.scalars().all()
 
     # update user
 

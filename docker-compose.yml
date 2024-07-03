@@ -10,29 +10,29 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    env_file:
-      - .env  # Include the .env file
     command:
       - /bin/bash
       - -c
       - poetry run uvicorn app.main:app --reload --host=0.0.0.0 --port=8000
+    restart: always
 
-
-
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root1234
-      MYSQL_DATABASE: dev
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user1234
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
+  memind-postgres:
+      image: postgres:15.4
+      container_name: postgres
+      environment:
+        POSTGRES_USER: dev
+        POSTGRES_PASSWORD: dev1234
+        POSTGRES_DB: dev
+      ports:
+        - "5432:5432"
+      volumes:
+        - pg_data:/var/lib/postgresql/data
 
 
 volumes:
   mysql_data:
+    external: false
+  redis_data:
+    external: false
+  pg_data:
     external: false
