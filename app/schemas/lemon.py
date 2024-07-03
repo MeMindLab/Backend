@@ -15,6 +15,3 @@ class LemonUpdate(LemonBase):
 
 class LemonRead(LemonBase):
     id: int
-
-    class Config:
-        orm_mode = True
