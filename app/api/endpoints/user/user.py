@@ -1,26 +1,14 @@
 # fastapi
 from fastapi import APIRouter, Depends, HTTPException
 
-# sqlalchemy
-from sqlalchemy.orm import Session
-from fastapi.responses import JSONResponse, Response
-from starlette import status
-from app.api.endpoints.user.functions import read_all_user, validate_nickname_length
 
 # import
-from app.core.dependencies import get_db
-from app.schemas.user import User, UserCreate, UserUpdate
-from app.api.endpoints.user import functions as user_functions
+from app.schemas.user import User, UserCreate
 from app.service.user import UserService
+from app.auth.authenticate import get_current_user
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 user_module = APIRouter()
-
-
-# @user_module.get('/')
-# async def read_auth_page():
-#     return {"msg": "Auth page Initialization done"}
 
 
 # create new user
@@ -65,6 +53,18 @@ async def get_users(
     return await user_service.get_user_list(skip, limit)
 
 
+# get current user
+@user_module.get("/me", response_model=User)
+async def user_me_handler(
+    current_user: int = Depends(get_current_user),
+    user_service: UserService = Depends(),
+) -> User:
+    return User.model_validate(
+        await user_service.get_user_by_id(user_id=current_user),
+        from_attributes=True,
+    )
+
+
 # get user by id
 @user_module.get(
     "/{user_id}",
@@ -73,24 +73,3 @@ async def get_user_by_id(user_id: int, user_service: UserService = Depends()):
     result = await user_service.get_user_by_id(user_id)
 
     return result
-
-
-# update user
-@user_module.patch(
-    "/{user_id}",
-    response_model=User,
-    #   dependencies=[Depends(RoleChecker(['admin']))]
-)
-async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
-    print(f"Received data: {user.model_dump()}")
-    return user_functions.update_user(db, user_id, user)
-
-
-# delete user
-@user_module.delete(
-    "/{user_id}",
-    #    response_model=User,
-    #    dependencies=[Depends(RoleChecker(['admin']))]
-)
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
-    return user_functions.delete_user(db, user_id)
