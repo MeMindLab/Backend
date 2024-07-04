@@ -33,7 +33,6 @@ class UserRepository:
     async def find_user_by_email(self, email: str):
         query = select(User).where(User.email == email)
         user = await self.session.execute(query)
-
         return user.scalars().first()
 
     async def save_user(self, user: User) -> User:

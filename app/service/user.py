@@ -15,7 +15,7 @@ class UserService:
     async def get_user_list(self, skip: int, limit: int) -> list[User]:
         return await self.user_repository.read_all_user(skip, limit)
 
-    async def get_user_by_id(self, user_id: str) -> User:
+    async def get_user_by_id(self, user_id: int) -> User:
         user = await self.user_repository.find_user_by_id(user_id=user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -38,6 +38,9 @@ class UserService:
         )
 
         return await self.user_repository.save_user(user=new_user)
+
+    async def get_current_user(self):
+        pass
 
     @staticmethod
     def validate_nickname_length(nickname: str):
