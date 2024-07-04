@@ -52,13 +52,13 @@ class Channel(str, Enum):
     SNA = "sna"
 
 
-class VerificationCheckResponse(BaseModel):
+class VerificationResult(BaseModel):
     to: Optional[str]
     channel: Channel
     status: Optional[str]
     valid: Optional[bool]
 
 
-class VerificationResult(BaseModel):
+class VerificationCheckResponse(BaseModel):
     success: bool
-    data: Dict[str, VerificationCheckResponse]
+    data: VerificationResult
