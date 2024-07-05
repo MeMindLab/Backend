@@ -7,7 +7,6 @@ class ConfigTemplate(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=os.path.expandvars(".env"),
         env_file_encoding="utf-8",
-        env_prefix="APP_",
     )
 
     DATABASE_USER: str = "dev"

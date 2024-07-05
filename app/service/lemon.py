@@ -49,17 +49,17 @@ class LemonService:
         self, lemon_data: LemonUpdate, user_id: int
     ) -> Lemon:
         # 사용자의 레몬을 가져옴
-        lemon = await self.lemon_repository.get_lemon_by_user_id(user_id)
+        existing_lemon = await self.lemon_repository.get_lemon_by_user_id(user_id)
 
-        if not lemon:
+        if not existing_lemon:
             raise HTTPException(
                 status_code=404, detail=f"Lemon not found for user_id={user_id}"
             )
 
         # 레몬 정보 업데이트
-        lemon.lemon_count = lemon_data.lemon_count
+        existing_lemon.lemon_count = lemon_data.lemon_count
 
         # 레몬 저장
-        updated_lemon = await self.lemon_repository.update_lemon(lemon)
+        updated_lemon = await self.lemon_repository.update_lemon(existing_lemon)
 
         return updated_lemon
