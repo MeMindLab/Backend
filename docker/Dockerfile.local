@@ -25,4 +25,4 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} pyt
 
 EXPOSE 8000
 
-WORKDIR /var/www/html
+WORKDIR /app
