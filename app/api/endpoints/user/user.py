@@ -73,10 +73,12 @@ async def user_me_handler(
     current_user: int = Depends(get_current_user),
     user_service: UserService = Depends(),
 ) -> UserSchema:
-    return UserSchema.model_validate(
-        await user_service.get_user_by_id(user_id=current_user),
-        from_attributes=True,
-    )
+    user = await user_service.get_user_by_id(user_id=current_user)
+    lemons_count = user.lemons.lemon_count if user.lemons else None
+    user_dict = user.__dict__
+    user_dict["lemons"] = lemons_count
+
+    return UserSchema(**user_dict)
 
 
 # get user by id

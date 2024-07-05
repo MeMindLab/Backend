@@ -20,5 +20,5 @@ class LemonRead(LemonBase):
     id: int
 
 
-class LemonCreateResponse(LemonBase):
+class LemonResponse(LemonBase):
     user_id: int
