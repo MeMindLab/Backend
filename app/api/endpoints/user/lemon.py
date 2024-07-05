@@ -1,38 +1,30 @@
-from fastapi import APIRouter, status, Depends
-from fastapi import APIRouter, Path, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Path, Depends
 
 
-from app.core.dependencies import get_db
-from app.models.user import User
 from app.service.lemon import LemonService
-from app.schemas.lemon import LemonUpdate, LemonCreate, LemonRead
-from app.models.lemon import Lemon as LemonModel
-from app.auth.authenticate import get_current_user
+from app.schemas.lemon import LemonResponse, LemonUpdate
 
-# sqlalchemy
-from sqlalchemy.orm import Session
+from app.auth.authenticate import get_current_user
 
 
 lemon_user_module = APIRouter()
 
 
-@lemon_user_module.get("/{user_id}/lemons")
-def read_lemons_by_user(
+@lemon_user_module.get("/{user_id}/lemons", response_model=LemonResponse)
+async def read_lemons_by_user(
     user_id: int = Path(..., title="User ID", description="The ID of the user"),
-    db: Session = Depends(get_db),
+    lemon_service: LemonService = Depends(),
 ):
-    lemon_service = LemonService(db)
-
-    lemons = lemon_service.get_lemon_by_user(user_id)
-    print(lemons)
-
-    pass
+    lemons = await lemon_service.get_lemon_by_user_id(user_id)
+    return lemons
 
 
 @lemon_user_module.patch("/{user_id}/lemon")
-def update_lemon_by_user(
+async def update_lemon_by_user(
     lemon_data: LemonUpdate,
     user_id: int = Path(..., title="User ID", description="The ID of the user"),
-    db: Session = Depends(get_db),
+    lemon_service: LemonService = Depends(),
 ):
-    pass
+    updated_lemon = await lemon_service.update_lemon_by_user_id(lemon_data, user_id)
+    return updated_lemon
