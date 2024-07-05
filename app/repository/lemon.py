@@ -22,8 +22,6 @@ class LemonRepository:
     # save lemon
     async def save_lemon(self, lemon: Lemon) -> Lemon:
         try:
-            print("레몬 저장하는 함수 repo")
-            print(lemon)
             self.session.add(lemon)
             await self.session.commit()  # 데이터베이스에 저장
             await self.session.refresh(lemon)  # 데이터베이스로부터 객체 새로고침
@@ -34,11 +32,6 @@ class LemonRepository:
             raise e
         finally:
             await self.session.close()  # 세션 닫
-        # self.session.add(instance=lemon)
-        # await self.session.commit()  # db save
-        # await self.session.refresh(instance=lemon)
-        # print(f"save lemon:{lemon}")
-        # return lemon
 
     def update_lemon(self, lemon: Lemon) -> Lemon:
         self.session.add(lemon)

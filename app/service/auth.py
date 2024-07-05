@@ -10,8 +10,7 @@ from app.repository.user import UserRepository
 
 from app.auth.hashpassword import HashPassword
 from app.auth.jwt_hanlder import create_access_token, create_refresh_token, decode_token
-from app.schemas.user import Token
-from app.schemas.user import UserLogin
+from app.schemas.user import Token, UserLogin
 
 
 def normalize_phone_number(phone: str) -> str:

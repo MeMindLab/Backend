@@ -24,4 +24,7 @@ class User(CommonModel):
     lemons = relationship("Lemon", back_populates="user", uselist=False)
 
     def __repr__(self):
-        return f"<User(email = {self.email}, nickname={self.nickname})"
+        if self.lemons is not None:
+            return f"<User(email={self.email}, nickname={self.nickname}, role={self.role.value}, is_verified={self.is_verified}, lemons={self.lemons.lemon_count})>"
+        else:
+            return f"<User(email={self.email}, nickname={self.nickname}, role={self.role.value}, is_verified={self.is_verified}, lemons=None)>"

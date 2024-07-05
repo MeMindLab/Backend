@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 
 # import
-from app.schemas.user import User, UserCreate
+from app.schemas.user import UserSchema, UserCreate, UserSignInResponse
 from app.service.user import UserService
 from app.auth.authenticate import get_current_user
 
@@ -12,7 +12,7 @@ user_module = APIRouter()
 
 
 # create new user
-@user_module.post("/signup", response_model=User)
+@user_module.post("/signup", response_model=UserSignInResponse)
 async def create_new_user(
     request: UserCreate,
     user_service: UserService = Depends(),
@@ -42,7 +42,7 @@ async def create_new_user(
 # get all user
 @user_module.get(
     "/",
-    response_model=list[User],
+    response_model=list[UserSchema],
     # dependencies=[Depends(RoleChecker(['admin']))]
 )
 async def get_users(
@@ -50,16 +50,30 @@ async def get_users(
     limit: int = 10,
     user_service: UserService = Depends(),
 ):
-    return await user_service.get_user_list(skip, limit)
+    users = await user_service.get_user_list(skip, limit)
+    return [
+        UserSchema(
+            id=user.id,
+            email=user.email,
+            nickname=user.nickname,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            role=user.role,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            lemons=user.lemons.lemon_count if user.lemons else None,
+        )
+        for user in users
+    ]
 
 
 # get current user
-@user_module.get("/me", response_model=User)
+@user_module.get("/me", response_model=UserSchema)
 async def user_me_handler(
     current_user: int = Depends(get_current_user),
     user_service: UserService = Depends(),
-) -> User:
-    return User.model_validate(
+) -> UserSchema:
+    return UserSchema.model_validate(
         await user_service.get_user_by_id(user_id=current_user),
         from_attributes=True,
     )
@@ -69,7 +83,18 @@ async def user_me_handler(
 @user_module.get(
     "/{user_id}",
 )
-async def get_user_by_id(user_id: int, user_service: UserService = Depends()):
+async def get_user_by_id(
+    user_id: int, user_service: UserService = Depends()
+) -> UserSchema:
     result = await user_service.get_user_by_id(user_id)
-
-    return result
+    return UserSchema(
+        id=result.id,
+        email=result.email,
+        nickname=result.nickname,
+        is_active=result.is_active,
+        is_verified=result.is_verified,
+        role=result.role,
+        created_at=result.created_at,
+        updated_at=result.updated_at,
+        lemons=result.lemons.lemon_count if result.lemons else None,
+    )
