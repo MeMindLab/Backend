@@ -1,7 +1,7 @@
 from enum import Enum
-from pydantic import BaseModel, validator, Field
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional
 from app.models.user import UserRole
 
 
@@ -18,17 +18,21 @@ class UserLogin(UserBase):
     password: str
 
 
-class User(UserBase):
+class UserSignInResponse(UserBase):
     id: int
     nickname: Optional[str]
     is_active: bool
+    is_verified: bool
     role: UserRole
     created_at: datetime
     updated_at: datetime
 
+
+class UserSchema(UserSignInResponse):
+    lemons: Optional[int]
+
     class Config:
         from_attributes = True
-        response_model_exclude = {"password"}
 
 
 class UserUpdate(BaseModel):

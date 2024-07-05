@@ -1,14 +1,11 @@
 from fastapi import Depends
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.models.user import User
 from app.core.dependencies import get_db
-
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
-# from sqlalchemy.future import select
-from sqlalchemy import select
 
 
 class UserRepository:
@@ -16,11 +13,21 @@ class UserRepository:
         self.session = session
 
     async def read_all_user(self, skip: int, limit: int) -> list[User]:
-        result = await self.session.execute(select(User).offset(skip).limit(limit))
+        query = (
+            select(User)
+            .outerjoin(User.lemons)
+            .options(selectinload(User.lemons))
+            .offset(skip)
+            .limit(limit)
+        )
+
+        result = await self.session.execute(query)
         return result.scalars().all()
 
     async def find_user_by_id(self, user_id: str) -> User | None:
-        query = select(User).filter(User.id == user_id)
+        query = (
+            select(User).filter(User.id == user_id).options(selectinload(User.lemons))
+        )
         result = await self.session.execute(query)
         user = result.scalars().first()
         return user
