@@ -11,10 +11,13 @@ class ConfigTemplate(BaseSettings):
 
     DATABASE_USER: str = "dev"
     DATABASE_PASSWORD: str = "dev1234"
-    # DATABASE_HOST: str = "localhost"
     DATABASE_HOST: str = "memind-postgres"
     DATABASE_PORT: int = 5432
     DATABASE_NAME: str = "dev"
+
+    SUPABASE_URL: str
+    SUPABASE_KEY: str
+    SUPABASE_BUCKET: str = "memind-image"
 
     SECRET_KEY: str = "09027e5d4c40783326cef1ee95c179c7dcaa4c92e90844c1c1958b027546d240"
     ALGORITHM: str = "HS256"
