@@ -1,10 +1,14 @@
-from app.core.config import get_config, ConfigTemplate
-from fastapi import Depends, UploadFile
-from typing import BinaryIO
-from PIL import Image
-from supabase import create_client
+import os
 import uuid
+import io
+from PIL import Image
+from fastapi import Depends
+from typing import BinaryIO
+from supabase_py_async import AsyncClient
 from multiprocessing import get_logger
+
+from app.core.config import get_config, ConfigTemplate
+from app.models.image import Image as ImageModel
 
 
 class ImageUtil:
@@ -13,32 +17,53 @@ class ImageUtil:
         config: ConfigTemplate = Depends(get_config),
     ):
         self.config = config
-        self.supabase_client = create_client(
+        self.supabase_client = AsyncClient(
             supabase_key=config.SUPABASE_KEY,
             supabase_url=config.SUPABASE_URL,
         )
 
-    def upload_image_to_supabase(
-        self, file: BinaryIO, bucket_name: str, file_path: str
+    async def get_image_url_by_path(self, file_path: str):
+        image_url = await self.supabase_client.storage.from_(
+            self.config.SUPABASE_BUCKET
+        ).get_public_url(file_path)
+        return image_url
+
+    async def upload_image_to_supabase(
+        self, file: io.BufferedReader, bucket_name: str, file_name: str
     ) -> None:
-        self.supabase_client.storage.from_(bucket_name).upload(
-            file=file, path=file_path, file_options={"content-type": "image/jpeg"}
+        await self.supabase_client.storage.from_(bucket_name).upload(
+            file=file, path=file_name, file_options={"content-type": "image/jpeg"}
         )
 
-    async def upload_image_storagea(
+    async def save_binary_to_filesystem(self, file: BinaryIO, filename: str) -> None:
+        with open(filename, "wb") as f:
+            f.write(file.read())
+
+    async def upload_image_storage(
         self, file: BinaryIO, filename: str, path: str, save_name: str
-    ):
+    ) -> ImageModel:
         # 파일 확장자 및 크기 검증
         await self._validate_file_extension(file, filename)
         extension = filename.split(".")[-1]
-
         file_path = f"{path}/{save_name}_{uuid.uuid4()}.{extension}"
+
         try:
-            response = await self.upload_image_to_supabase(
-                file=file, bucket_name=self.config.SUPABASE_BUCKET, file_path=file_path
+            # save image to file sytem
+            await self.save_binary_to_filesystem(file, f"./{filename}")
+
+            with open(f"./{filename}", "rb") as f:
+                await self.upload_image_to_supabase(
+                    file=f,
+                    bucket_name=self.config.SUPABASE_BUCKET,
+                    file_name=file_path,
+                )
+                os.remove(f"./{filename}")  # Remove file after uploading
+
+            return ImageModel(
+                path=file_path,
+                extension=extension,
             )
-            print(response)
-            return response
+
         except Exception as e:
             get_logger().error(e)
             raise ValueError(f"Failed to upload image to Supabase: {str(e)}")
