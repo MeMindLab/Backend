@@ -1,7 +1,10 @@
+from uuid import UUID
 from fastapi import APIRouter, UploadFile, Depends, File
 from app.service.supbase import SupabaseService
+from app.auth.authenticate import get_current_user
+
 from pydantic import BaseModel
-from uuid import UUID
+
 
 media_module = APIRouter(prefix="")
 
@@ -18,10 +21,13 @@ class ImageUploadResponse(BaseModel):
 
 @media_module.post("/upload", status_code=200)
 async def upload_image(
-    self,
     supabase: SupabaseService = Depends(),
     file: UploadFile = File(...),
-) -> str:
-    upload_url = await supabase.upload_image(file)
+    auth: UUID = Depends(get_current_user),
+):
+    uploaded_url = await supabase.upload_image(user_id=auth, file=file)
 
-    return upload_url
+    return ImageUploadResponse(
+        converstaion_id="conversatino id",
+        image_url=uploaded_url,
+    )

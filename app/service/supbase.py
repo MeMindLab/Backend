@@ -1,20 +1,42 @@
+from uuid import UUID
+import datetime
+
 from fastapi import Depends, UploadFile, HTTPException
 from app.utils.image import ImageUtil
-from app.repository.user import UserRepository
+from app.repository.image import ImageRepository
 
 
 class SupabaseService:
     def __init__(
         self,
         image_util: ImageUtil = Depends(ImageUtil),
-        user_repository: UserRepository = Depends(UserRepository),
+        image_repository: ImageRepository = Depends(ImageRepository),
     ):
         self.image_util = image_util
-        self.user_repository = user_repository
+        self.image_repository = image_repository
 
-    async def upload_image(self, file: UploadFile) -> str:
+    async def upload_image(
+        self,
+        user_id: UUID,
+        file: UploadFile,
+    ):
         if file is None or file.filename is None:
             raise HTTPException(status_code=400, detail="File is required")
 
         # image upload
-        pass
+        image = await self.image_util.upload_image_storage(
+            file=file.file,
+            filename=file.filename,
+            path=f"Images/{user_id}",  # file path to add conversation id
+            save_name=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+        )
+
+        # save image to db
+        image = await self.image_repository.save_image(image=image)
+
+        # link to conversaton table
+
+        # return image_url
+        image_url = await self.image_util.get_image_url_by_path(file_path=image.path)
+
+        return image_url

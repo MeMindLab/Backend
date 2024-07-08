@@ -12,6 +12,7 @@ from app.core.database import Base
 from app.models.user import User
 from app.models.lemon import Lemon
 from app.models.common import CommonModel
+from app.models.image import Image
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
