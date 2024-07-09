@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 # import
 from app.schemas.user import UserSchema, UserCreate, UserSignInResponse
 from app.service.user import UserService
+from app.service.lemon import LemonService
+from app.schemas.lemon import LemonCreate
 from app.auth.authenticate import get_current_user
 
 
@@ -15,6 +17,7 @@ user_module = APIRouter()
 @user_module.post("/signup", response_model=UserSignInResponse)
 async def create_new_user(
     request: UserCreate,
+    lemon_service: LemonService = Depends(),
     user_service: UserService = Depends(),
 ):
     try:
@@ -33,6 +36,13 @@ async def create_new_user(
             raise HTTPException(status_code=400, detail="Invalid nickname")
 
         new_user = await user_service.create_new_user(user=request)
+
+        # 레몬 초기화
+        lemon_create = LemonCreate(lemon_count=0)
+        await lemon_service.create_lemon_for_user(
+            lemon_create=lemon_create, user_id=new_user.id
+        )
+
         return new_user
 
     except HTTPException:
