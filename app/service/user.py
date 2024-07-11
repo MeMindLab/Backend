@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException
 from app.models.user import User
 from app.repository.user import UserRepository
 from app.auth import hashpassword
+from app.schemas.user import UserCreate, UserUpdate
 
 
 hash_password = hashpassword.HashPassword()
@@ -39,10 +40,15 @@ class UserService:
 
         return await self.user_repository.save_user(user=new_user)
 
-    async def update_user(self, user_id: int, email: str, nickname: str) -> User:
+    async def update_user(
+        self,
+        user_id: int,
+        user_data: UserUpdate,
+    ) -> User:
         user = await self.get_user_by_id(user_id=user_id)
-        user.email = email
-        user.nickname = nickname
+        user.email = user_data.email
+        user.nickname = user_data.nickname
+        user.is_active = user_data.active
 
         updated_user = await self.user_repository.save_user(user=user)
 

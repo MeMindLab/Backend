@@ -2,7 +2,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 # import
-from app.schemas.user import UserSchema, UserCreate, UserUpdate, UserSignInResponse, UserMeResponse
+from app.schemas.user import (
+    UserSchema,
+    UserCreate,
+    UserUpdate,
+    UserSignInResponse,
+    UserMeResponse,
+)
 from app.service.user import UserService
 from app.service.lemon import LemonService
 from app.schemas.lemon import LemonCreate
@@ -14,9 +20,9 @@ user_module = APIRouter()
 # create new user
 @user_module.post("/signup", response_model=UserSignInResponse)
 async def create_new_user(
-        request: UserCreate,
-        lemon_service: LemonService = Depends(),
-        user_service: UserService = Depends(),
+    request: UserCreate,
+    lemon_service: LemonService = Depends(),
+    user_service: UserService = Depends(),
 ):
     try:
         # 닉네임 길이 검증
@@ -54,9 +60,9 @@ async def create_new_user(
     # dependencies=[Depends(RoleChecker(['admin']))]
 )
 async def get_users(
-        skip: int = 0,
-        limit: int = 10,
-        user_service: UserService = Depends(),
+    skip: int = 0,
+    limit: int = 10,
+    user_service: UserService = Depends(),
 ):
     users = await user_service.get_user_list(skip, limit)
     return [
@@ -78,8 +84,8 @@ async def get_users(
 # get current user
 @user_module.get("/me", response_model=UserMeResponse)
 async def user_me_handler(
-        current_user: int = Depends(get_current_user),
-        user_service: UserService = Depends(),
+    current_user: int = Depends(get_current_user),
+    user_service: UserService = Depends(),
 ) -> UserMeResponse:
     user = await user_service.get_user_by_id(user_id=current_user)
 
@@ -88,14 +94,13 @@ async def user_me_handler(
 
 @user_module.put("/me", response_model=UserMeResponse)
 async def update_user(
-        update_data: UserUpdate,
-        current_user: int = Depends(get_current_user),
-        user_service: UserService = Depends(),
+    update_data: UserUpdate,
+    current_user: int = Depends(get_current_user),
+    user_service: UserService = Depends(),
 ):
     user = await user_service.update_user(
         user_id=current_user,
-        email=update_data.email,
-        nickname=update_data.nickname
+        user_data=update_data,
     )
 
     return UserMeResponse.from_orm(user)
@@ -103,10 +108,11 @@ async def update_user(
 
 # get user by id
 @user_module.get(
-    "/{user_id}", response_model=UserMeResponse,
+    "/{user_id}",
+    response_model=UserMeResponse,
 )
 async def get_user_by_id(
-        user_id: int, user_service: UserService = Depends()
+    user_id: int, user_service: UserService = Depends()
 ) -> UserMeResponse:
     user = await user_service.get_user_by_id(user_id)
     return UserMeResponse.from_orm(user)
