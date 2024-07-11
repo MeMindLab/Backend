@@ -48,7 +48,7 @@ class UserService:
         user = await self.get_user_by_id(user_id=user_id)
         user.email = user_data.email
         user.nickname = user_data.nickname
-        user.is_active = user_data.active
+        user.id = user_data.is_verified
 
         updated_user = await self.user_repository.save_user(user=user)
 
