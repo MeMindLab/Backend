@@ -30,6 +30,7 @@ class UserSignInResponse(UserBase):
 
 class UserUpdate(UserBase):
     nickname: str
+    is_verified: bool
 
 
 class UserMeResponse(UserSignInResponse):
