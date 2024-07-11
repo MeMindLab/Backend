@@ -39,8 +39,14 @@ class UserService:
 
         return await self.user_repository.save_user(user=new_user)
 
-    async def get_current_user(self):
-        pass
+    async def update_user(self, user_id: int, email: str, nickname: str) -> User:
+        user = await self.get_user_by_id(user_id=user_id)
+        user.email = email
+        user.nickname = nickname
+
+        updated_user = await self.user_repository.save_user(user=user)
+
+        return updated_user
 
     @staticmethod
     def validate_nickname_length(nickname: str):

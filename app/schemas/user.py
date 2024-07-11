@@ -28,17 +28,20 @@ class UserSignInResponse(UserBase):
     updated_at: datetime
 
 
+class UserUpdate(UserBase):
+    nickname: str
+
+
+class UserMeResponse(UserSignInResponse):
+    class Config:
+        from_attributes = True
+
+
 class UserSchema(UserSignInResponse):
     lemons: Optional[int]
 
     class Config:
         from_attributes = True
-
-
-class UserUpdate(BaseModel):
-    nickname: str | None = None
-    is_active: bool | None = None
-    role: UserRole | None = None
 
 
 class Token(BaseModel):
