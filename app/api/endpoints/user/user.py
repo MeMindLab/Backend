@@ -1,5 +1,5 @@
 # fastapi
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 
 # import
 from app.schemas.user import (
@@ -75,6 +75,7 @@ async def get_users(
             role=user.role,
             created_at=user.created_at,
             updated_at=user.updated_at,
+            mobile=user.mobile,
             lemons=user.lemons.lemon_count if user.lemons else None,
         )
         for user in users

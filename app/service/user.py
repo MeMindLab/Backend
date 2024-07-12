@@ -48,7 +48,14 @@ class UserService:
         user = await self.get_user_by_id(user_id=user_id)
         user.email = user_data.email
         user.nickname = user_data.nickname
-        user.is_verified = user_data.is_verified
+
+        # Check if is_verified is provided
+        if user_data.is_verified is not None:
+            user.is_verified = user_data.is_verified
+
+        # Check if mobile is provided
+        if user_data.mobile is not None:
+            user.mobile = user_data.mobile
 
         updated_user = await self.user_repository.save_user(user=user)
 

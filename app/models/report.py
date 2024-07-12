@@ -1,5 +1,5 @@
 # app/models/report.py
-from tokenize import String
+
 from uuid import uuid4
 from typing import Dict
 from sqlalchemy import (
@@ -17,25 +17,13 @@ from app.core.database import Base
 from app.models.common import TimestampMixin
 
 
-class Tags(Base, TimestampMixin):
-    __tablename__ = "tags"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
-    tags = mapped_column(type_=JSON, nullable=False)
-    report_summary_id = mapped_column(
-        Uuid, ForeignKey("report_summary.id"), nullable=False
-    )
+class DrawingDiary(Base, TimestampMixin):
+    __tablename__ = "drawing_diary"
+    drawing_image_id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    image_url = mapped_column(String(256), nullable=False)
+    image_title = mapped_column(String(50), nullable=False)
 
-    report_summary = relationship("ReportSummary", back_populates="tags")
-
-
-class ReportSummary(Base, TimestampMixin):
-    __tablename__ = "report_summary"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
-    contents = mapped_column(Text, nullable=False)
-
-    tags = relationship("Tags", back_populates="report_summary")
-
-    reports = relationship("Report", back_populates="report_summary")
+    reports = relationship("Report", back_populates="drawing_diary")
 
 
 class Emotion(Base, TimestampMixin):
@@ -105,13 +93,25 @@ class Emotion(Base, TimestampMixin):
         }
 
 
-class DrawingDiary(Base, TimestampMixin):
-    __tablename__ = "drawing_diary"
-    drawing_image_id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
-    image_url = mapped_column(String(256), nullable=False)
-    image_title = mapped_column(String(50), nullable=False)
+class ReportSummary(Base, TimestampMixin):
+    __tablename__ = "report_summary"
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    contents = mapped_column(Text, nullable=False)
 
-    reports = relationship("Report", back_populates="drawing_diary")
+    tags = relationship("Tags", back_populates="report_summary")
+
+    reports = relationship("Report", back_populates="report_summary")
+
+
+class Tags(Base, TimestampMixin):
+    __tablename__ = "tags"
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    tags = mapped_column(type_=JSON, nullable=False)
+    report_summary_id = mapped_column(
+        Uuid, ForeignKey("report_summary.id"), nullable=False
+    )
+
+    report_summary = relationship("ReportSummary", back_populates="tags")
 
 
 class Report(Base, TimestampMixin):

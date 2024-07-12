@@ -23,6 +23,7 @@ class User(CommonModel):
     nickname: Mapped[str | None] = mapped_column(String(120), nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.user)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    mobile: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
     lemons: Mapped["Lemon"] = relationship(
         "Lemon", back_populates="user", uselist=False
