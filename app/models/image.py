@@ -13,6 +13,7 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+from app.models.chat import Message, Conversation
 
 
 class Image(Base):
@@ -22,8 +23,8 @@ class Image(Base):
     path = mapped_column(String(256), nullable=False)
     extension = mapped_column(String(8), nullable=False)
 
-    # conversation_id = mapped_column(Uuid, ForeignKey("conversations.id"), nullable=True)
-    # message_id = mapped_column(Uuid, ForeignKey("messages.id"), nullable=True)
-    #
-    # conversation = relationship("Conversation", back_populates="images")
-    # message = relationship("Message", back_populates="images")
+    conversation_id = mapped_column(Uuid, ForeignKey("conversations.id"), nullable=True)
+    message_id = mapped_column(Uuid, ForeignKey("messages.id"), nullable=True)
+
+    conversation = relationship("Conversation", back_populates="images")
+    message = relationship("Message", back_populates="images")

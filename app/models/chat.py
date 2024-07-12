@@ -18,14 +18,14 @@ class Message(Base, TimestampMixin):
     message_timestamp: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
     )
+    images = relationship("Image", back_populates="message")
 
 
 class Conversation(Base, TimestampMixin):
     __tablename__ = "conversations"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4().hex)
     user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    images = relationship("Image", back_populates="conversation")
 
     # 외래 키 설정
-    user: Mapped["User"] = relationship(
-        "User", backref="conversation_user", foreign_keys=[user_id]
-    )
+    user: Mapped["User"] = relationship("User", backref="conversation_user")
