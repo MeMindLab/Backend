@@ -1,4 +1,4 @@
-# app/models/chat.py
+# 대화 관리 모델
 from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import Text, Integer, Boolean, Uuid, DateTime, ForeignKey
@@ -11,7 +11,7 @@ from app.models.user import User
 
 class Message(Base, TimestampMixin):
     __tablename__ = "messages"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4().hex)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
     index: Mapped[int] = mapped_column(Integer, nullable=False)
     is_from_user: Mapped[bool] = mapped_column(Boolean, nullable=False)
     message = mapped_column(Text, nullable=True)
@@ -23,9 +23,11 @@ class Message(Base, TimestampMixin):
 
 class Conversation(Base, TimestampMixin):
     __tablename__ = "conversations"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4().hex)
-    user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+
+    user_id = mapped_column(ForeignKey("users.id"), nullable=False)
     images = relationship("Image", back_populates="conversation")
 
     # 외래 키 설정
     user: Mapped["User"] = relationship("User", backref="conversation_user")
+    reports = relationship("Report", back_populates="conversation")

@@ -1,5 +1,6 @@
+from uuid import uuid4
 from typing import TYPE_CHECKING
-from sqlalchemy import Column, String, Enum, Boolean, Integer
+from sqlalchemy import Column, String, Enum, Boolean, Uuid
 from enum import Enum as PythonEnum
 
 from sqlalchemy.orm import relationship, mapped_column, Mapped
@@ -17,7 +18,7 @@ class UserRole(str, PythonEnum):
 
 class User(CommonModel):
     __tablename__ = "users"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
     email: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     password: Mapped[str] = mapped_column(String(255))
     nickname: Mapped[str | None] = mapped_column(String(120), nullable=True)
