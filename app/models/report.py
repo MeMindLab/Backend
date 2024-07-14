@@ -1,4 +1,5 @@
 # app/models/report.py
+# 레포트 관리 모델
 
 from uuid import uuid4
 from typing import Dict
@@ -17,9 +18,10 @@ from app.core.database import Base
 from app.models.common import TimestampMixin
 
 
+# 그림일기(생성형 이미지)
 class DrawingDiary(Base, TimestampMixin):
     __tablename__ = "drawing_diary"
-    drawing_image_id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    drawing_diary_id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
     image_url = mapped_column(String(256), nullable=False)
     image_title = mapped_column(String(50), nullable=False)
 
@@ -118,12 +120,13 @@ class Report(Base, TimestampMixin):
     __tablename__ = "report"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
     drawing_diary_id = mapped_column(
-        Uuid, ForeignKey("drawing_diary.drawing_image_id"), nullable=False
+        ForeignKey("drawing_diary.drawing_diary_id"), nullable=False
     )
-    emotion_id = mapped_column(Uuid, ForeignKey("emotion.id"), nullable=False)
-    report_summary_id = mapped_column(
-        Uuid, ForeignKey("report_summary.id"), nullable=False
-    )
+    emotion_id = mapped_column(ForeignKey("emotion.id"), nullable=False)
+    report_summary_id = mapped_column(ForeignKey("report_summary.id"), nullable=False)
+    conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=False)
+
+    conversation = relationship("Conversation", back_populates="reports")
 
     drawing_diary = relationship(
         "DrawingDiary",
