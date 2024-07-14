@@ -1,6 +1,6 @@
 # app/models/image
 
-from uuid import uuid4
+import uuid
 from sqlalchemy import (
     Uuid,
     String,
@@ -14,12 +14,12 @@ from app.core.database import Base
 class Image(Base):
     __tablename__ = "images"
 
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     path = mapped_column(String(256), nullable=False)
     extension = mapped_column(String(8), nullable=False)
 
-    conversation_id = mapped_column(Uuid, ForeignKey("conversations.id"), nullable=True)
-    message_id = mapped_column(Uuid, ForeignKey("messages.id"), nullable=True)
+    conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=True)
+    message_id = mapped_column(ForeignKey("messages.id"), nullable=True)
 
     conversation = relationship("Conversation", back_populates="images")
     message = relationship("Message", back_populates="images")

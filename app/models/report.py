@@ -1,7 +1,7 @@
 # app/models/report.py
 # 레포트 관리 모델
 
-from uuid import uuid4
+import uuid
 from typing import Dict
 from sqlalchemy import (
     Integer,
@@ -21,7 +21,9 @@ from app.models.common import TimestampMixin
 # 그림일기(생성형 이미지)
 class DrawingDiary(Base, TimestampMixin):
     __tablename__ = "drawing_diary"
-    drawing_diary_id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    drawing_diary_id = mapped_column(
+        Uuid, primary_key=True, index=True, default=uuid.uuid4
+    )
     image_url = mapped_column(String(256), nullable=False)
     image_title = mapped_column(String(50), nullable=False)
 
@@ -30,7 +32,7 @@ class DrawingDiary(Base, TimestampMixin):
 
 class Emotion(Base, TimestampMixin):
     __tablename__ = "emotion"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
 
     comfortable_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     happy_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -97,7 +99,7 @@ class Emotion(Base, TimestampMixin):
 
 class ReportSummary(Base, TimestampMixin):
     __tablename__ = "report_summary"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     contents = mapped_column(Text, nullable=False)
 
     tags = relationship("Tags", back_populates="report_summary")
@@ -107,7 +109,7 @@ class ReportSummary(Base, TimestampMixin):
 
 class Tags(Base, TimestampMixin):
     __tablename__ = "tags"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     tags = mapped_column(type_=JSON, nullable=False)
     report_summary_id = mapped_column(
         Uuid, ForeignKey("report_summary.id"), nullable=False
@@ -118,7 +120,7 @@ class Tags(Base, TimestampMixin):
 
 class Report(Base, TimestampMixin):
     __tablename__ = "report"
-    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid4)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     drawing_diary_id = mapped_column(
         ForeignKey("drawing_diary.drawing_diary_id"), nullable=False
     )
