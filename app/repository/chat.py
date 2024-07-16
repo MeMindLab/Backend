@@ -19,12 +19,11 @@ class ConversationRepository:
     ):
         self.session = session
 
-    async def get_conversation(self, date: datetime.date, user_id: UUID):
+    async def get_conversation(
+        self, date: datetime.date, user_id: UUID
+    ) -> list[Conversation]:
         """해당 일자에 conversation_id를 리턴하는 함수"""
-        # # 날짜 파싱
-        # date_object = datetime.strptime(date, "%Y-%m-%d").date()
 
-        # 기존 대화 검색
         query = (
             select(Conversation)
             .where(Conversation.user_id == user_id)
@@ -32,7 +31,7 @@ class ConversationRepository:
         )
 
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return result.scalars().one_or_none()
 
     async def create_conversation(self, user_id: UUID, date_object: datetime.date):
         """새로운 대화를 생성하는 함수"""

@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import Depends
-from datetime import date, datetime
+from datetime import date
+import json
 
 from langchain_openai import ChatOpenAI
 from langchain.prompts.few_shot import FewShotChatMessagePromptTemplate
@@ -12,6 +13,12 @@ from app.core.config import ConfigTemplate, get_config
 from app.core.dependencies import get_db
 from app.prompt.examples import example
 from app.repository.chat import ConversationRepository, MessageRepository
+
+
+class EnoughJudge:
+    @staticmethod
+    def is_enough(conversation_length) -> bool:
+        return conversation_length > 13
 
 
 class OpenAIChatClient:
@@ -61,9 +68,7 @@ class ChatPromptGenerator:
                     Your name is 구르미.
                     You are my best friend, empathize with my feelings and ask questions.
                     You are informal and use a casual tone of voice.
-                    Your first message to the user should be fixed to '안녕 난 구르미야 :)
-                    오늘 하루 있었던 일이나 기분을 말해줘.
-                    나 구르미가 모두 다 들어줄게!)'
+                    Your first message to the user should be fixed to '안녕 난 구르미야 :) 오늘 하루 있었던 일이나 기분을 말해줘. 나 구르미가 모두 다 들어줄게!)'
                     At the end of the conversation, you should message
                     "Thanks for talking to 구르미, see you tomorrow!"
                     """,
@@ -88,11 +93,11 @@ class ChatMemoryService:
     def __init__(self, memory):
         self.memory = memory
 
-    def add_message(self, message):
+    async def add_message(self, message):
         """사용자의 메시지를 메모리에 추가합니다."""
         self.memory.add(message)
 
-    def get_history(self):
+    async def get_history(self):
         """전체 대화 히스토리를 조회합니다."""
         return list(self.memory)
 
@@ -102,32 +107,72 @@ class MessageService:
         self,
         openai_chat_client: OpenAIChatClient = Depends(OpenAIChatClient),
         session=Depends(get_db),
+        message_repository: MessageRepository = Depends(),
+        # chat_memory: ChatMemoryService = Depends(ChatMemoryService),
     ):
         self.session = session
         self.chat_instance = openai_chat_client.chat_instance
         self.chat_prompt = ChatPromptGenerator().generate_chat_prompt()
+        self.message_repository = message_repository
+        # self.chat_memory = chat_memory
 
-    async def get_all_full_messages(self, conversation_id: str):
-        """해당 conversation에서 나누었던 message들을 모두 리턴하는 함수"""
-        pass
-
-    async def answer_conversation(self, user_text: str) -> str:
+    async def get_messages_from_ai(self, text: str) -> str:
         try:
-            # 이전 대화 내역이 있으면 채팅에 추가합니다.
-
-            # 사용자 입력을 채팅에 추가합니다.
-
             prompt = self.chat_prompt
-
             chat_chain = prompt | self.chat_instance
-
-            response = await chat_chain.ainvoke({"user": user_text})
-
+            response = await chat_chain.ainvoke({"user": text})
             return response.content
         except Exception as e:
             # 오류 처리를 원하는 방식으로 추가합니다.
-            print(f"Error in answering conversation: {e}")
-            return "Error: Failed to respond to conversation"
+            print(f"Error in processing dialogue: {e}")
+            return "Error: Failed to process dialogue"
+
+    async def get_all_full_messages(self, conversation_id: UUID):
+        """해당 conversation에서 나누었던 message들을 모두 리턴하는 함수"""
+        messages = await self.message_repository.get_messages(conversation_id)
+        return messages
+
+    async def answer_message(self, user_text: str, conversation_id: UUID):
+        # 이전 대화 내역이 있으면 채팅에 추가합니다.
+        messages = await self.get_all_full_messages(conversation_id)
+        order = len(messages)
+
+        # # TODO: 메모리에서 사용자 대화내역 추가
+        # await self.chat_memory.add_message(user_text)
+        #
+        # # TODO: 메모리에서 전체 대화 내용을 가져옵니다.
+        # full_chat_history = self.chat_memory.get_history()
+        #
+        # # TODO: OpenAI에 추가된 전체 대화 내용을 전달하여 대화를 생성합니다.
+        # ai_message = await self.get_messages_from_ai(full_chat_history)
+        #
+        # # 메모리에 챗봇의 응답도 추가합니다.
+        # await self.chat_memory.add_message(ai_message)
+
+        # 유저 메세지 저장
+        await self.message_repository.create_message(
+            conversation_id=conversation_id,
+            is_from_user=True,
+            message=user_text,
+            index=order + 1,
+        )
+
+        # chain에 대화 요청
+        ai_message = await self.get_messages_from_ai(user_text)
+
+        # 요청된 대화 저장
+        await self.message_repository.create_message(
+            conversation_id=conversation_id,
+            is_from_user=False,
+            message=ai_message,
+            index=order + 2,
+        )
+
+        # 챗봇의 답변을 사용자 메시지와 함께 반환합니다.
+        return {
+            "message": ai_message,
+            "is_enough": EnoughJudge.is_enough(order),
+        }
 
 
 class ConversationService:
@@ -149,40 +194,50 @@ class ConversationService:
         result = await self.conversation_repository.get_conversation(
             diary_date, user_id
         )
-        print(result)
-        pass
+        return result
 
     # conversation 생성, message load, 길이 check
     async def start_conversation(self, diary_date: date, user_id: UUID):
         """conversation이 있으면, 대화 내용을 리턴하고, 없으면 새로 conversation을 생성하는 함수"""
         existing_conversation = await self.get_conversation(diary_date, user_id)
 
-        # if existing_conversation:
-        #     # 기존 대화가 있는 경우, 대화 기록을 가져옵니다.
-        #
-        # else:
+        if existing_conversation:
+            print(existing_conversation)
 
-        # conversation이 존재하지 않는 경우, 새로 conversation 생성
+            # 기존 대화가 있는 경우, 대화 기록을 가져옵니다.
+            chat_history = await self.message_repository.get_messages(
+                existing_conversation.id
+            )
 
-        new_conversation = await self.conversation_repository.create_conversation(
-            user_id, diary_date
-        )
+            return {
+                "conversation_id": existing_conversation.id,
+                "chat_history": chat_history,
+                "is_enough": EnoughJudge.is_enough(len(chat_history)),
+            }
+        else:
+            # conversation이 존재하지 않는 경우, 새로 conversation 생성
 
-        # 초기 메시지 생성을 위해 GPT-3.5를 사용하여 대화 시작
-        initial_message = await self.message_service.answer_conversation("")
-        # 메시지 저장
-        await self.message_repository.create_message(
-            new_conversation.id,
-            is_from_user=False,
-            message=initial_message,
-            index=0,
-        )
+            new_conversation = await self.conversation_repository.create_conversation(
+                user_id, diary_date
+            )
 
-        # # chat history
-        chat_history = await self.message_repository.get_messages(new_conversation.id)
+            initial_message = await self.message_service.get_messages_from_ai("")
 
-        return {
-            "conversation_id": new_conversation.id,
-            "chat_history": chat_history,
-            "is_enough": False,  # 나중에 백엔드에서 로직을 추가하여 처리
-        }
+            # 메시지 저장
+            await self.message_repository.create_message(
+                new_conversation.id,
+                is_from_user=False,
+                message=initial_message,
+                index=0,
+            )
+
+            # chat history
+            chat_history = await self.message_repository.get_messages(
+                new_conversation.id
+            )
+
+            return {
+                "conversation_id": new_conversation.id,
+                "chat_history": chat_history,
+                "is_enough": EnoughJudge.is_enough(len(chat_history)),
+            }
