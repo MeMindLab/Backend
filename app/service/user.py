@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-
+from uuid import UUID
 from app.models.user import User
 from app.repository.user import UserRepository
 from app.auth import hashpassword
@@ -16,7 +16,7 @@ class UserService:
     async def get_user_list(self, skip: int, limit: int) -> list[User]:
         return await self.user_repository.read_all_user(skip, limit)
 
-    async def get_user_by_id(self, user_id: int) -> User:
+    async def get_user_by_id(self, user_id: UUID) -> User:
         user = await self.user_repository.find_user_by_id(user_id=user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -42,7 +42,7 @@ class UserService:
 
     async def update_user(
         self,
-        user_id: int,
+        user_id: UUID,
         user_data: UserUpdate,
     ) -> User:
         user = await self.get_user_by_id(user_id=user_id)

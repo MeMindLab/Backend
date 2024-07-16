@@ -1,3 +1,5 @@
+from uuid import UUID
+
 # fastapi
 from fastapi import APIRouter, Depends, HTTPException, Body
 
@@ -85,9 +87,10 @@ async def get_users(
 # get current user
 @user_module.get("/me", response_model=UserMeResponse)
 async def user_me_handler(
-    current_user: int = Depends(get_current_user),
+    current_user: UUID = Depends(get_current_user),
     user_service: UserService = Depends(),
 ) -> UserMeResponse:
+    print(current_user)
     user = await user_service.get_user_by_id(user_id=current_user)
 
     return UserMeResponse.from_orm(user)
@@ -96,7 +99,7 @@ async def user_me_handler(
 @user_module.put("/me", response_model=UserMeResponse)
 async def update_user(
     update_data: UserUpdate,
-    current_user: int = Depends(get_current_user),
+    current_user: UUID = Depends(get_current_user),
     user_service: UserService = Depends(),
 ):
     user = await user_service.update_user(
@@ -113,7 +116,7 @@ async def update_user(
     response_model=UserMeResponse,
 )
 async def get_user_by_id(
-    user_id: int, user_service: UserService = Depends()
+    user_id: UUID, user_service: UserService = Depends()
 ) -> UserMeResponse:
     user = await user_service.get_user_by_id(user_id)
     return UserMeResponse.from_orm(user)
