@@ -1,3 +1,4 @@
+from uuid import UUID
 from enum import Enum
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -19,7 +20,7 @@ class UserLogin(UserBase):
 
 
 class UserSignInResponse(UserBase):
-    id: int
+    id: UUID
     nickname: Optional[str]
     is_active: bool
     is_verified: bool

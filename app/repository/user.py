@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +25,7 @@ class UserRepository:
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    async def find_user_by_id(self, user_id: int) -> User | None:
+    async def find_user_by_id(self, user_id: UUID) -> User | None:
         query = select(User).where(User.id == user_id)
         result = await self.session.execute(query)
         user = result.scalars().first()
