@@ -1,13 +1,22 @@
 from uuid import UUID
 from fastapi import Depends
 from datetime import date
-import json
+from operator import itemgetter
 
 from langchain_openai import ChatOpenAI
 from langchain.prompts.few_shot import FewShotChatMessagePromptTemplate
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.callbacks import AsyncIteratorCallbackHandler
-
+from langchain.memory import (
+    ConversationSummaryBufferMemory,
+)
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnablePassthrough,
+    Runnable,
+    RunnableParallel,
+)
+from langchain_core.output_parsers import StrOutputParser
 
 from app.core.config import ConfigTemplate, get_config
 from app.core.dependencies import get_db
@@ -47,18 +56,17 @@ class ChatPromptGenerator:
     def generate_chat_prompt() -> ChatPromptTemplate:
         # 사용자와 AI의 대화 예제를 기본 프롬프트로 생성합니다.
         example_prompt = ChatPromptTemplate.from_messages(
-            [("human", "{user}"), ("ai", "{ai}")],
+            [
+                ("human", "{user}"),
+                ("ai", "{ai}"),
+            ],
         )
 
-        # Few-shot learning을 위한 예제
-        examples = example  # 이곳에서 example을 사용
-
-        # Few-shot learning을 위한 프롬프트 생성
+        examples = example
         few_shot_prompt = FewShotChatMessagePromptTemplate(
             examples=examples, example_prompt=example_prompt
         )
 
-        # 최종 대화 프롬프트 생성
         removed = ChatPromptTemplate.from_messages(
             [
                 (
@@ -69,11 +77,8 @@ class ChatPromptGenerator:
                     You are my best friend, empathize with my feelings and ask questions.
                     You are informal and use a casual tone of voice.
                     Your first message to the user should be fixed to '안녕 난 구르미야 :) 오늘 하루 있었던 일이나 기분을 말해줘. 나 구르미가 모두 다 들어줄게!)'
-                    At the end of the conversation, you should message
-                    "Thanks for talking to 구르미, see you tomorrow!"
                     """,
                 ),
-                few_shot_prompt,
                 (
                     "ai",
                     """
@@ -82,6 +87,8 @@ class ChatPromptGenerator:
                     I'm here to listen to what you have to say.
                     """,
                 ),
+                few_shot_prompt,
+                MessagesPlaceholder(variable_name="chat_history"),
                 ("human", "{user}"),
             ]
         )
@@ -89,39 +96,70 @@ class ChatPromptGenerator:
         return removed
 
 
-class ChatMemoryService:
-    def __init__(self, memory):
-        self.memory = memory
+class ConversationChain(Runnable):
+    def __init__(
+        self,
+        llm,
+        prompt,
+        input_key: str = "user",
+    ):
+        self.prompt = prompt
+        self.llm = llm
 
-    async def add_message(self, message):
-        """사용자의 메시지를 메모리에 추가합니다."""
-        self.memory.add(message)
+        self.memory = ConversationSummaryBufferMemory(
+            llm=self.llm,
+            max_token_limit=120,
+            return_messages=True,
+            memory_key="chat_history",
+        )
 
-    async def get_history(self):
-        """전체 대화 히스토리를 조회합니다."""
-        return list(self.memory)
+        self.input_key = input_key
+        self.chain = (
+            RunnablePassthrough.assign(
+                chat_history=RunnableLambda(self.memory.aload_memory_variables)
+                | itemgetter(self.memory.memory_key)
+            )
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
+
+    async def add_user_message(self, message):
+        """Adds a user's message to memory."""
+        await self.memory.asave_context(inputs={"human": message}, outputs={"ai": ""})
+
+    async def add_memory(self, user_message: str, ai_message: str):
+        """사용자와 AI 메시지를 모두 메모리에 추가합니다."""
+        await self.memory.asave_context(
+            inputs={"human": user_message}, outputs={"ai": ai_message}
+        )
+
+    async def invoke(self, query, configs=None, **kwargs):
+        answer = await self.chain.ainvoke({self.input_key: query})
+        await self.memory.asave_context(inputs={"human": query}, outputs={"ai": answer})
+        return answer
 
 
 class MessageService:
     def __init__(
         self,
-        openai_chat_client: OpenAIChatClient = Depends(OpenAIChatClient),
         session=Depends(get_db),
+        openai_chat_client: OpenAIChatClient = Depends(OpenAIChatClient),
         message_repository: MessageRepository = Depends(),
-        # chat_memory: ChatMemoryService = Depends(ChatMemoryService),
     ):
         self.session = session
-        self.chat_instance = openai_chat_client.chat_instance
+        self.llm = openai_chat_client.chat_instance
         self.chat_prompt = ChatPromptGenerator().generate_chat_prompt()
         self.message_repository = message_repository
-        # self.chat_memory = chat_memory
+        self.conversation_chain = ConversationChain(
+            llm=self.llm,
+            prompt=self.chat_prompt,
+        )
 
-    async def get_messages_from_ai(self, text: str) -> str:
+    async def get_messages_from_ai(self, text: str):
         try:
-            prompt = self.chat_prompt
-            chat_chain = prompt | self.chat_instance
-            response = await chat_chain.ainvoke({"user": text})
-            return response.content
+            response = await self.conversation_chain.invoke(text)
+            return response
         except Exception as e:
             # 오류 처리를 원하는 방식으로 추가합니다.
             print(f"Error in processing dialogue: {e}")
@@ -137,19 +175,14 @@ class MessageService:
         messages = await self.get_all_full_messages(conversation_id)
         order = len(messages)
 
-        # # TODO: 메모리에서 사용자 대화내역 추가
-        # await self.chat_memory.add_message(user_text)
-        #
-        # # TODO: 메모리에서 전체 대화 내용을 가져옵니다.
-        # full_chat_history = self.chat_memory.get_history()
-        #
-        # # TODO: OpenAI에 추가된 전체 대화 내용을 전달하여 대화를 생성합니다.
-        # ai_message = await self.get_messages_from_ai(full_chat_history)
-        #
-        # # 메모리에 챗봇의 응답도 추가합니다.
-        # await self.chat_memory.add_message(ai_message)
+        # 메모리에 챗봇의 응답도 추가합니다.
+        for message in messages:
+            await self.conversation_chain.add_memory(
+                user_message=message.message if message.is_from_user else "",
+                ai_message=message.message if not message.is_from_user else "",
+            )
 
-        # 유저 메세지 저장
+        # # 유저 메세지 저장
         await self.message_repository.create_message(
             conversation_id=conversation_id,
             is_from_user=True,
@@ -221,7 +254,7 @@ class ConversationService:
                 user_id, diary_date
             )
 
-            initial_message = await self.message_service.get_messages_from_ai("")
+            initial_message = "안녕 난 구르미야 :) 오늘 하루 있었던 일이나 기분을 말해줘. 나 구르미가 모두 다 들어줄게!"
 
             # 메시지 저장
             await self.message_repository.create_message(
