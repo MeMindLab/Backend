@@ -5,9 +5,6 @@ from app.schemas.chat import ChatResponse, ChatRequest, ConversationRequest
 from app.service.chat import MessageService, ConversationService
 from app.auth.authenticate import get_current_user
 
-# sqlalchemy
-from sqlalchemy.orm import Session
-
 
 chat_module = APIRouter()
 
@@ -25,8 +22,11 @@ async def start_conversation(
     return result
 
 
-@chat_module.post("/answer", status_code=status.HTTP_200_OK)
-async def chat_answer(req: ChatRequest, message_service: MessageService = Depends()):
+@chat_module.post("/answer")
+async def chat_answer(
+    req: ChatRequest,
+    message_service: MessageService = Depends(),
+):
     try:
         answer = await message_service.answer_message(
             user_text=req.message, conversation_id=req.conversation_id
