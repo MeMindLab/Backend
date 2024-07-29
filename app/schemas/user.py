@@ -57,6 +57,11 @@ class UserMeResponse(UserSignInResponse):
         from_attributes = True
 
 
+class UserWithdrawal(BaseModel):
+    password: str = Field(..., min_length=8)
+    delete_reason: str
+
+
 class UserSchema(UserMeResponse):
     lemons: Optional[int]
 

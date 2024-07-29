@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from uuid import UUID
 from app.models.user import User
 from app.repository.user import UserRepository
@@ -60,6 +60,28 @@ class UserService:
         updated_user = await self.user_repository.save_user(user=user)
 
         return updated_user
+
+    async def deactivate_user(self, user_id: UUID, password: str, delete_reason: str):
+        user = await self.get_user_by_id(user_id=user_id)
+
+        if not hash_password.verify_hash(password, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Password not matching"
+            )
+
+        await self.user_repository.deactivate_user(
+            user=user, delete_reason=delete_reason
+        )
+
+    async def reactivate_user(self, user_id: UUID):
+        user = await self.user_repository.find_user_by_id(user_id=user_id)
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+
+        await self.user_repository.reactivate_user(user=user)
 
     @staticmethod
     def validate_nickname_length(nickname: str):

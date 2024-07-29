@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 from fastapi import Depends
 
@@ -18,6 +19,7 @@ class UserRepository:
             select(User)
             .outerjoin(User.lemons)
             .options(selectinload(User.lemons))
+            # .filter(User.deleted_at.is_(None))  # Apply soft delete filter
             .offset(skip)
             .limit(limit)
         )
@@ -46,3 +48,32 @@ class UserRepository:
         await self.session.commit()  # db save
         await self.session.refresh(instance=user)
         return user
+
+    async def deactivate_user(self, user: User, delete_reason: str):
+        try:
+            user.delete_reason = delete_reason
+            user.delete()
+
+            user.is_active = False
+
+            # Add the updated user to the session
+            self.session.add(user)
+
+            # Commit the transaction
+            await self.session.commit()
+
+            # Refresh the user instance to reflect changes
+            await self.session.refresh(user)
+        except Exception as e:
+            await self.session.rollback()  # Rollback in case of error
+            print(f"Error during deactivation: {e}")
+
+    async def reactivate_user(self, user: User):
+        try:
+            user.undelete()  # Undelete using the mixin method
+            self.session.add(user)
+            await self.session.commit()
+            await self.session.refresh(user)
+        except Exception as e:
+            await self.session.rollback()
+            print(f"Error during reactivation: {e}")

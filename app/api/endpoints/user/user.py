@@ -10,6 +10,7 @@ from app.schemas.user import (
     UserUpdate,
     UserSignInResponse,
     UserMeResponse,
+    UserWithdrawal,
 )
 from app.service.user import UserService
 from app.service.lemon import LemonService
@@ -120,3 +121,17 @@ async def get_user_by_id(
 ) -> UserMeResponse:
     user = await user_service.get_user_by_id(user_id)
     return UserMeResponse.from_orm(user)
+
+
+# user-withdrawal
+@user_module.delete("/withdraw", status_code=204)
+async def delete_user_handler(
+    request: UserWithdrawal,
+    current_user: UUID = Depends(get_current_user),
+    user_service: UserService = Depends(),
+):
+    await user_service.deactivate_user(
+        user_id=current_user,
+        password=request.password,
+        delete_reason=request.delete_reason,
+    )
