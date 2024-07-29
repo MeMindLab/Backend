@@ -1,7 +1,6 @@
 # app/models/lemon.py
-
-
-from sqlalchemy import Integer, ForeignKey
+import uuid
+from sqlalchemy import Integer, ForeignKey, Uuid
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from app.core.database import Base
 from app.models.common import TimestampMixin
@@ -12,14 +11,14 @@ from app.models.user import User
 class Lemon(Base, TimestampMixin):
     __tablename__ = "lemons"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     lemon_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), unique=True)
+    user_id = mapped_column(ForeignKey("users.id"), unique=True)
 
     user: Mapped["User"] = relationship("User", back_populates="lemons")
 
     @classmethod
-    def create(cls, request: LemonCreate, user_id: int) -> "Lemon":
+    def create(cls, request: LemonCreate, user_id: uuid.UUID) -> "Lemon":
         return cls(
             lemon_count=request.lemon_count,
             user_id=user_id,

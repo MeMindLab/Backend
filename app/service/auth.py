@@ -47,24 +47,23 @@ class AuthService:
         # 엑세스 토큰 생성
         access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"id": user.id, "email": user.email, "role": user.role},
+            data={"id": str(user.id), "email": user.email, "role": user.role},
             expires_delta=access_token_expires,
         )
 
         # 리프레시 토큰 생성
         refresh_token_expires = timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
         refresh_token = create_refresh_token(
-            data={"id": user.id, "email": user.email},
+            data={"id": str(user.id), "email": user.email},
             expires_delta=refresh_token_expires,
         )
 
         # 토큰 만료 시간 계산 (엑세스 토큰)
         expires_in = access_token_expires.total_seconds()
-
         # 응답 구성
         return Token(
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token=str(access_token),
+            refresh_token=str(refresh_token),
             token_type="bearer",
             expires_in=expires_in,
         )

@@ -27,6 +27,13 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
+from app.models.user import User
+from app.models.lemon import Lemon
+from app.models.common import CommonModel
+from app.models.image import Image
+from app.models.chat import Conversation, Message
+
+
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 

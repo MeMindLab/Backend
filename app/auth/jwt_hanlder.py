@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
+from uuid import UUID
 from typing import Optional
 
 from jose import jwt, JWTError

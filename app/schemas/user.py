@@ -1,3 +1,4 @@
+from uuid import UUID
 from enum import Enum
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -19,7 +20,7 @@ class UserLogin(UserBase):
 
 
 class UserSignInResponse(UserBase):
-    id: int
+    id: UUID
     nickname: Optional[str]
     is_active: bool
     is_verified: bool
@@ -28,17 +29,39 @@ class UserSignInResponse(UserBase):
     updated_at: datetime
 
 
-class UserSchema(UserSignInResponse):
-    lemons: Optional[int]
+class UserUpdate(UserBase):
+    nickname: str
+    is_verified: Optional[bool] = Field(
+        False, description="Optional verification status"
+    )
+    mobile: Optional[str] = Field(None, description="Optional mobile number")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "test@test.com",
+                    "nickname": "tester",
+                    "is_verified": False,
+                    "mobile": "01010048282",
+                }
+            ]
+        }
+    }
+
+
+class UserMeResponse(UserSignInResponse):
+    mobile: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 
-class UserUpdate(BaseModel):
-    nickname: str | None = None
-    is_active: bool | None = None
-    role: UserRole | None = None
+class UserSchema(UserMeResponse):
+    lemons: Optional[int]
+
+    class Config:
+        from_attributes = True
 
 
 class Token(BaseModel):
