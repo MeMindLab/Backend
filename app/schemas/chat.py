@@ -36,3 +36,16 @@ class ConversationResponse(BaseModel):
     conversation_id: str
     is_enough: bool
     chat_history: List[Message]
+
+
+class ConversationBase(BaseModel):
+    conversation_id: UUID
+    user_id: UUID
+    date: date
+
+    class Config:
+        from_attributes = True
+
+
+class MonthlyConversationsResponse(BaseModel):
+    conversations: List[ConversationBase]

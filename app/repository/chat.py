@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 from uuid import UUID
 from typing import List
 
@@ -18,6 +18,30 @@ class ConversationRepository:
         session: AsyncSession = Depends(get_db),
     ):
         self.session = session
+
+    async def get_monthly_conversations(
+        self, user_id: UUID, month: int, year: int
+    ) -> list[Conversation]:
+        query = (
+            select(Conversation)
+            .where(Conversation.user_id == user_id)
+            .where(Conversation.date >= date(year, month, 1))
+            .where(Conversation.date < date(year + (month // 12), (month % 12) + 1, 1))
+        )
+
+        result = await self.session.execute(query)
+        conversations = []
+        for row in result.scalars().all():
+            conversation = Conversation(
+                id=row.id,
+                user_id=row.user_id,
+                date=row.date,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+            )
+            conversations.append(conversation)
+
+        return conversations
 
     async def get_conversation(
         self, date: datetime.date, user_id: UUID

@@ -19,7 +19,6 @@ class UserRepository:
             select(User)
             .outerjoin(User.lemons)
             .options(selectinload(User.lemons))
-            # .filter(User.deleted_at.is_(None))  # Apply soft delete filter
             .offset(skip)
             .limit(limit)
         )

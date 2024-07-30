@@ -1,7 +1,12 @@
 from uuid import UUID
 from fastapi import APIRouter, status, Depends
 
-from app.schemas.chat import ChatResponse, ChatRequest, ConversationRequest
+from app.schemas.chat import (
+    ChatRequest,
+    ConversationRequest,
+    MonthlyConversationsResponse,
+    ConversationBase,
+)
 from app.service.chat import MessageService, ConversationService
 from app.auth.authenticate import get_current_user
 
@@ -36,3 +41,34 @@ async def chat_answer(
     except Exception as e:
         # 오류 처리를 원하는 방식으로 추가합니다.
         print(f"Error in answering conversation: {e}")
+
+
+@chat_module.get("/monthly-conversations", response_model=MonthlyConversationsResponse)
+async def get_monthly_conversations(
+    year: int,
+    month: int,
+    conversation_service: ConversationService = Depends(),
+    auth: UUID = Depends(get_current_user),
+):
+    try:
+        conversations = await conversation_service.get_monthly_conversations(
+            year=year, month=month, user_id=auth
+        )
+
+        result = MonthlyConversationsResponse(
+            conversations=[
+                ConversationBase(
+                    conversation_id=conversation.id,
+                    user_id=conversation.user_id,
+                    date=conversation.date,
+                )
+                for conversation in conversations
+            ]
+        )
+
+        return result
+
+    except Exception as e:
+        # Error handling can be added as per your application's needs
+        print(f"Error in fetching monthly conversations: {e}")
+        return {"error": "Failed to fetch monthly conversations"}

@@ -223,6 +223,16 @@ class ConversationService:
         self.message_repository = message_repository
         self.message_service = message_service
 
+    async def get_monthly_conversations(self, year: int, month: int, user_id: UUID):
+        # 해당 월의 대화 리스트 가져오기
+        conversations = await self.conversation_repository.get_monthly_conversations(
+            user_id=user_id,
+            month=month,
+            year=year,
+        )
+
+        return conversations
+
     async def get_conversation(self, diary_date: date, user_id: UUID):
         result = await self.conversation_repository.get_conversation(
             diary_date, user_id
