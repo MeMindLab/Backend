@@ -21,7 +21,7 @@ class ConfigTemplate(BaseSettings):
 
     SECRET_KEY: str = "09027e5d4c40783326cef1ee95c179c7dcaa4c92e90844c1c1958b027546d240"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 5  # 5분
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # 5분
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
     TWILIO_VERIFY_SERVICE_SID: str

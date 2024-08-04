@@ -46,7 +46,7 @@ class ConversationRepository:
     async def get_conversation(
         self, date: datetime.date, user_id: UUID
     ) -> list[Conversation]:
-        """해당 일자에 conversation_id를 리턴하는 함수"""
+        """해당 일자에 conversation를 리턴하는 함수"""
 
         query = (
             select(Conversation)
@@ -79,7 +79,17 @@ class MessageRepository:
 
         query = select(Message).filter(Message.conversation_id == conversation_id)
         result = await self.session.execute(query)
-        return result.scalars().all()
+
+        return [
+            Message(
+                id=row.id,
+                conversation_id=row.conversation_id,
+                is_from_user=row.is_from_user,
+                message=row.message,
+                index=row.index,
+            )
+            for row in result.scalars().all()
+        ]
 
     async def create_message(
         self,

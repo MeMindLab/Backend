@@ -2,9 +2,11 @@ from fastapi import APIRouter
 from app.api.routers.user import user_router
 from app.api.routers.chat import chat_router
 from app.api.routers.upload import upload_router
+from app.api.routers.report import report_router
 
 router = APIRouter()
 
 router.include_router(user_router)
 router.include_router(chat_router)
 router.include_router(upload_router)
+router.include_router(report_router)
