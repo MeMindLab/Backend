@@ -1,143 +1,16 @@
 from uuid import UUID
 from fastapi import Depends
 from datetime import date
-from operator import itemgetter
 
-from langchain_openai import ChatOpenAI
-from langchain.prompts.few_shot import FewShotChatMessagePromptTemplate
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.callbacks import AsyncIteratorCallbackHandler
-from langchain.memory import (
-    ConversationSummaryBufferMemory,
-)
-from langchain_core.runnables import (
-    RunnableLambda,
-    RunnablePassthrough,
-    Runnable,
-    RunnableParallel,
-)
-from langchain_core.output_parsers import StrOutputParser
-
-from app.core.config import ConfigTemplate, get_config
 from app.core.dependencies import get_db
-from app.prompt.examples import example
 from app.repository.chat import ConversationRepository, MessageRepository
+from app.service.llm import OpenAIChatClient, PromptGenerator, ConversationChain
 
 
 class EnoughJudge:
     @staticmethod
     def is_enough(conversation_length) -> bool:
         return conversation_length > 13
-
-
-class OpenAIChatClient:
-    def __init__(
-        self,
-        config: ConfigTemplate = Depends(get_config),
-    ):
-        self.config = config
-        self.chat_instance = self.create_chat_instance()
-
-    def create_chat_instance(self) -> ChatOpenAI:
-        # ChatOpenAI 설정
-        chat = ChatOpenAI(
-            api_key=self.config.OPENAI_API_KEY,
-            temperature=0.1,
-            streaming=True,
-            callbacks=[
-                AsyncIteratorCallbackHandler(),
-            ],
-        )
-        return chat
-
-
-class ChatPromptGenerator:
-    @staticmethod
-    def generate_chat_prompt() -> ChatPromptTemplate:
-        # 사용자와 AI의 대화 예제를 기본 프롬프트로 생성합니다.
-        example_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("human", "{user}"),
-                ("ai", "{ai}"),
-            ],
-        )
-
-        examples = example
-        few_shot_prompt = FewShotChatMessagePromptTemplate(
-            examples=examples, example_prompt=example_prompt
-        )
-
-        removed = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
-                    You're a useful AI emotional counselor. 
-                    Your name is 구르미.
-                    You are my best friend, empathize with my feelings and ask questions.
-                    You are informal and use a casual tone of voice.
-                    Your first message to the user should be fixed to '안녕 난 구르미야 :) 오늘 하루 있었던 일이나 기분을 말해줘. 나 구르미가 모두 다 들어줄게!)'
-                    """,
-                ),
-                (
-                    "ai",
-                    """
-                    Hi, I'm Gurumi! 😊
-                    Tell me about your day or how you're feeling.
-                    I'm here to listen to what you have to say.
-                    """,
-                ),
-                few_shot_prompt,
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("human", "{user}"),
-            ]
-        )
-
-        return removed
-
-
-class ConversationChain(Runnable):
-    def __init__(
-        self,
-        llm,
-        prompt,
-        input_key: str = "user",
-    ):
-        self.prompt = prompt
-        self.llm = llm
-
-        self.memory = ConversationSummaryBufferMemory(
-            llm=self.llm,
-            max_token_limit=120,
-            return_messages=True,
-            memory_key="chat_history",
-        )
-
-        self.input_key = input_key
-        self.chain = (
-            RunnablePassthrough.assign(
-                chat_history=RunnableLambda(self.memory.aload_memory_variables)
-                | itemgetter(self.memory.memory_key)
-            )
-            | prompt
-            | llm
-            | StrOutputParser()
-        )
-
-    async def add_user_message(self, message):
-        """Adds a user's message to memory."""
-        await self.memory.asave_context(inputs={"human": message}, outputs={"ai": ""})
-
-    async def add_memory(self, user_message: str, ai_message: str):
-        """사용자와 AI 메시지를 모두 메모리에 추가합니다."""
-        await self.memory.asave_context(
-            inputs={"human": user_message}, outputs={"ai": ai_message}
-        )
-
-    async def invoke(self, query, configs=None, **kwargs):
-        answer = await self.chain.ainvoke({self.input_key: query})
-        await self.memory.asave_context(inputs={"human": query}, outputs={"ai": answer})
-        return answer
 
 
 class MessageService:
@@ -149,7 +22,7 @@ class MessageService:
     ):
         self.session = session
         self.llm = openai_chat_client.chat_instance
-        self.chat_prompt = ChatPromptGenerator().generate_chat_prompt()
+        self.chat_prompt = PromptGenerator().generate_chat_prompt()
         self.message_repository = message_repository
         self.conversation_chain = ConversationChain(
             llm=self.llm,
