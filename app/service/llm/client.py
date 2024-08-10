@@ -1,12 +1,15 @@
 from fastapi import Depends
 
+from openai import AsyncOpenAI
+
+
 from langchain_openai import ChatOpenAI
 from langchain.callbacks import AsyncIteratorCallbackHandler
 
 from app.core.config import ConfigTemplate, get_config
 
 
-class OpenAIChatClient:
+class OpenAIClient:
     def __init__(
         self,
         config: ConfigTemplate = Depends(get_config),
@@ -25,3 +28,10 @@ class OpenAIChatClient:
             ],
         )
         return chat
+
+    def create_openai_instance(self) -> AsyncOpenAI:
+        # ChatOpenAI 설정
+        client = AsyncOpenAI(
+            api_key=self.config.OPENAI_API_KEY,
+        )
+        return client

@@ -117,6 +117,13 @@ class Tags(Base, TimestampMixin):
 
     report_summary = relationship("ReportSummary", back_populates="tags")
 
+    @classmethod
+    def create(cls, tags: list[str], report_id: uuid.UUID):
+        return cls(
+            tags=tags,
+            report_summary_id=report_id,
+        )
+
 
 class Report(Base, TimestampMixin):
     __tablename__ = "report"

@@ -8,6 +8,11 @@ from app.prompt.examples import example
 
 class PromptGenerator:
     @staticmethod
+    def generate_summary_prompt():
+        loaded_prompt = load_prompt("./app/prompt/summary.yaml")
+        return loaded_prompt
+
+    @staticmethod
     def generate_keyword_prompt():
         loaded_prompt = load_prompt("./app/prompt/keyword.yaml")
         return loaded_prompt

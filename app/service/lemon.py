@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import Depends, HTTPException
 from typing import Optional
 
@@ -19,7 +20,7 @@ class LemonService:
         self.user_repository = user_repository
 
     async def create_lemon_for_user(
-        self, lemon_create: LemonCreate, user_id: int
+        self, lemon_create: LemonCreate, user_id: UUID
     ) -> Lemon:
         # 사용자의 레몬을 가져옴
         existing_lemon = await self.lemon_repository.get_lemon_by_user_id(user_id)

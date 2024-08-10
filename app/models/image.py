@@ -23,3 +23,18 @@ class Image(Base):
 
     conversation = relationship("Conversation", back_populates="images")
     message = relationship("Message", back_populates="images")
+
+    @classmethod
+    def create(
+        cls,
+        path: str,
+        extension: str,
+        conversation_id: uuid.UUID,
+        message_id: uuid.UUID,
+    ):
+        return cls(
+            path=path,
+            extension=extension,
+            conversation_id=conversation_id,
+            message_id=message_id,
+        )
