@@ -1,6 +1,9 @@
 from uuid import UUID
+
+
 from fastapi import APIRouter, UploadFile, Depends, File
 from app.service.supbase import SupabaseService
+from app.service.image import ImageService
 from app.auth.authenticate import get_current_user
 
 from pydantic import BaseModel
@@ -16,7 +19,7 @@ class ImageUpload(BaseModel):
 
 class ImageUploadResponse(BaseModel):
     image_url: str
-    converstaion_id: str
+    conversation_id: str
 
 
 @media_module.post("/upload", status_code=200)
@@ -31,3 +34,16 @@ async def upload_image(
         converstaion_id="conversatino id",
         image_url=uploaded_url,
     )
+
+
+class GenerateImageRequest(BaseModel):
+    keywords: list[str]
+
+
+@media_module.post("/generate-image", status_code=200)
+async def generate_image(
+    image_service: ImageService = Depends(ImageService),
+    q: GenerateImageRequest = Depends(),
+):
+    result = await image_service.generate_image(keywords=q.keywords)
+    return result

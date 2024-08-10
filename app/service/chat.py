@@ -4,7 +4,7 @@ from datetime import date
 
 from app.core.dependencies import get_db
 from app.repository.chat import ConversationRepository, MessageRepository
-from app.service.llm import OpenAIChatClient, PromptGenerator, ConversationChain
+from app.service.llm import OpenAIClient, PromptGenerator, ConversationChain
 
 
 class EnoughJudge:
@@ -17,7 +17,7 @@ class MessageService:
     def __init__(
         self,
         session=Depends(get_db),
-        openai_chat_client: OpenAIChatClient = Depends(OpenAIChatClient),
+        openai_chat_client: OpenAIClient = Depends(OpenAIClient),
         message_repository: MessageRepository = Depends(),
     ):
         self.session = session
