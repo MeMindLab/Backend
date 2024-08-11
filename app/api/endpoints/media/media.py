@@ -12,26 +12,24 @@ from pydantic import BaseModel
 media_module = APIRouter(prefix="")
 
 
-class ImageUpload(BaseModel):
-    id: UUID
-    conversation_id: int
-
-
 class ImageUploadResponse(BaseModel):
+    conversation_id: UUID
     image_url: str
-    conversation_id: str
 
 
 @media_module.post("/upload", status_code=200)
 async def upload_image(
-    supabase: SupabaseService = Depends(),
+    conversation_id: UUID,
     file: UploadFile = File(...),
+    supabase: SupabaseService = Depends(),
     auth: UUID = Depends(get_current_user),
 ):
-    uploaded_url = await supabase.upload_image(user_id=auth, file=file)
+    uploaded_url = await supabase.upload_image(
+        user_id=auth, conversation_id=conversation_id, file=file
+    )
 
     return ImageUploadResponse(
-        converstaion_id="conversatino id",
+        conversation_id=conversation_id,
         image_url=uploaded_url,
     )
 
@@ -47,3 +45,8 @@ async def generate_image(
 ):
     result = await image_service.generate_image(keywords=q.keywords)
     return result
+
+
+@media_module.post("/update-image", status_code=200)
+async def update_dalle_image():
+    pass
