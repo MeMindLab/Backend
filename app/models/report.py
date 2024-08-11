@@ -41,6 +41,7 @@ class Emotion(Base, TimestampMixin):
     __tablename__ = "emotion"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
 
+    total_score: Mapped[int] = mapped_column(Integer, nullable=False)
     comfortable_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     happy_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     sad_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -53,9 +54,9 @@ class Emotion(Base, TimestampMixin):
         back_populates="emotions",
     )
 
-    @hybrid_property
-    def total_emotion_score(self) -> int:
-        return (
+    def calculate_percentages(self) -> Dict[str, float]:
+        # Calculate the sum of all scores except total_score
+        sum_scores = (
             self.comfortable_score
             + self.happy_score
             + self.sad_score
@@ -64,49 +65,24 @@ class Emotion(Base, TimestampMixin):
             + self.lethargic_score
         )
 
-    @total_emotion_score.expression
-    def _total_emotion_score_expression(cls) -> int:
-        return (
-            func.coalesce(cls.comfortable_score, 0)
-            + func.coalesce(cls.happy_score, 0)
-            + func.coalesce(cls.sad_score, 0)
-            + func.coalesce(cls.joyful_score, 0)
-            + func.coalesce(cls.annoyed_score, 0)
-            + func.coalesce(cls.lethargic_score, 0)
-        )
-
-    @classmethod
-    def calculate_emotion_percentages(cls) -> Dict[str, Mapped[float]]:
-        total_score = cls._total_emotion_score_expression()
-        total = func.coalesce(
-            total_score,
-            0.0,
-        )
-
-        return {
-            "comfortable_percent": func.round(
-                func.coalesce(cls.comfortable_score / total * 100, 0.0), 2
+        # Calculate the percentage for each score
+        percentages = {
+            "comfortable_percentage": round(
+                (self.comfortable_score / sum_scores) * 100, 2
             ),
-            "happy_percent": func.round(
-                func.coalesce(cls.happy_score / total * 100, 0.0), 2
-            ),
-            "sad_percent": func.round(
-                func.coalesce(cls.sad_score / total * 100, 0.0), 2
-            ),
-            "fun_percent": func.round(
-                func.coalesce(cls.joyful_score / total * 100, 0.0), 2
-            ),
-            "annoyed_percent": func.round(
-                func.coalesce(cls.annoyed_score / total * 100, 0.0), 2
-            ),
-            "lethargic_percent": func.round(
-                func.coalesce(cls.lethargic_score / total * 100, 0.0), 2
-            ),
+            "happy_percentage": round((self.happy_score / sum_scores) * 100, 2),
+            "sad_percentage": round((self.sad_score / sum_scores) * 100, 2),
+            "joyful_percentage": round((self.joyful_score / sum_scores) * 100, 2),
+            "annoyed_percentage": round((self.annoyed_score / sum_scores) * 100, 2),
+            "lethargic_percentage": round((self.lethargic_score / sum_scores) * 100, 2),
         }
+
+        return percentages
 
     @classmethod
     def create(
         cls,
+        total_score: int,
         comfortable_score: int,
         happy_score: int,
         sad_score: int,
@@ -115,6 +91,7 @@ class Emotion(Base, TimestampMixin):
         lethargic_score: int,
     ) -> "Emotion":
         return cls(
+            total_score=total_score,
             comfortable_score=comfortable_score,
             happy_score=happy_score,
             sad_score=sad_score,
