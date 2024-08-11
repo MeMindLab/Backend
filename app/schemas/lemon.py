@@ -1,3 +1,4 @@
+from uuid import UUID
 from pydantic import BaseModel
 
 
@@ -21,4 +22,4 @@ class LemonRead(LemonBase):
 
 
 class LemonResponse(LemonBase):
-    user_id: int
+    user_id: UUID

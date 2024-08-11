@@ -35,7 +35,7 @@ class LemonService:
         saved_lemon = await self.lemon_repository.save_lemon(lemon=lemon)
         return saved_lemon
 
-    async def get_lemon_by_user_id(self, user_id: int) -> Optional[Lemon]:
+    async def get_lemon_by_user_id(self, user_id: UUID) -> Optional[Lemon]:
         if user_id is None:
             raise HTTPException(status_code=404, detail="User id is required!")
 
@@ -47,7 +47,7 @@ class LemonService:
         return lemon
 
     async def update_lemon_by_user_id(
-        self, lemon_data: LemonUpdate, user_id: int
+        self, lemon_data: LemonUpdate, user_id: UUID
     ) -> Lemon:
         # 사용자의 레몬을 가져옴
         existing_lemon = await self.lemon_repository.get_lemon_by_user_id(user_id)

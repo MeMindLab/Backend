@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import Depends
 
 
@@ -11,7 +12,7 @@ class LemonRepository:
     def __init__(self, session=Depends(get_db)):
         self.session = session
 
-    async def get_lemon_by_user_id(self, user_id: int) -> Optional[Lemon]:
+    async def get_lemon_by_user_id(self, user_id: UUID) -> Optional[Lemon]:
         query = select(Lemon).filter(Lemon.user_id == user_id)
         result = await self.session.execute(query)
         return result.scalar()
