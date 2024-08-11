@@ -43,42 +43,61 @@ class MessageService:
         messages = await self.message_repository.get_messages(conversation_id)
         return messages
 
-    async def answer_message(self, user_text: str, conversation_id: UUID):
+    async def answer_message(
+        self, user_text: str, conversation_id: UUID, image_url: str, is_image: bool
+    ):
         # 이전 대화 내역이 있으면 채팅에 추가합니다.
         messages = await self.get_all_full_messages(conversation_id)
         order = len(messages)
 
-        # 메모리에 챗봇의 응답도 추가합니다.
-        for message in messages:
-            await self.conversation_chain.add_memory(
-                user_message=message.message if message.is_from_user else "",
-                ai_message=message.message if not message.is_from_user else "",
+        if is_image and image_url:
+            # 이미지 메세지 처리
+
+            await self.message_repository.create_message(
+                conversation_id=conversation_id,
+                is_from_user=True,
+                index=order + 1,
+                image_url=image_url,
             )
 
-        # # 유저 메세지 저장
-        await self.message_repository.create_message(
-            conversation_id=conversation_id,
-            is_from_user=True,
-            message=user_text,
-            index=order + 1,
-        )
+            # 대화 기록에 이미지를 추가했으므로 챗봇의 메모리에 추가할 필요는 없음.
+            return {
+                "message": "Image received and stored.",
+                "is_enough": EnoughJudge.is_enough(order),
+            }
 
-        # chain에 대화 요청
-        ai_message = await self.get_messages_from_ai(user_text)
+        else:
+            # 메모리에 챗봇의 응답도 추가합니다.
+            for message in messages:
+                await self.conversation_chain.add_memory(
+                    user_message=message.message if message.is_from_user else "",
+                    ai_message=message.message if not message.is_from_user else "",
+                )
 
-        # 요청된 대화 저장
-        await self.message_repository.create_message(
-            conversation_id=conversation_id,
-            is_from_user=False,
-            message=ai_message,
-            index=order + 2,
-        )
+            # # 유저 메세지 저장
+            await self.message_repository.create_message(
+                conversation_id=conversation_id,
+                is_from_user=True,
+                message=user_text,
+                index=order + 1,
+            )
 
-        # 챗봇의 답변을 사용자 메시지와 함께 반환합니다.
-        return {
-            "message": ai_message,
-            "is_enough": EnoughJudge.is_enough(order),
-        }
+            # chain에 대화 요청
+            ai_message = await self.get_messages_from_ai(user_text)
+
+            # 요청된 대화 저장
+            await self.message_repository.create_message(
+                conversation_id=conversation_id,
+                is_from_user=False,
+                message=ai_message,
+                index=order + 2,
+            )
+
+            # 챗봇의 답변을 사용자 메시지와 함께 반환합니다.
+            return {
+                "message": ai_message,
+                "is_enough": EnoughJudge.is_enough(order),
+            }
 
 
 class ConversationService:

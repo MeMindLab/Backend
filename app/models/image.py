@@ -19,10 +19,7 @@ class Image(Base):
     extension = mapped_column(String(8), nullable=False)
 
     conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=True)
-    message_id = mapped_column(ForeignKey("messages.id"), nullable=True)
-
     conversation = relationship("Conversation", back_populates="images")
-    message = relationship("Message", back_populates="images")
 
     @classmethod
     def create(

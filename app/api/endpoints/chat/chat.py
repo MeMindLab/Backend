@@ -34,7 +34,10 @@ async def chat_answer(
 ):
     try:
         answer = await message_service.answer_message(
-            user_text=req.message, conversation_id=req.conversation_id
+            user_text=req.message,
+            conversation_id=req.conversation_id,
+            image_url=req.image_url,
+            is_image=req.is_image,
         )
         return {"result": answer}
 

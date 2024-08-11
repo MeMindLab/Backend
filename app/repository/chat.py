@@ -87,6 +87,7 @@ class MessageRepository:
                 is_from_user=row.is_from_user,
                 message=row.message,
                 index=row.index,
+                image_url=row.image_url,
             )
             for row in result.scalars().all()
         ]
@@ -95,8 +96,9 @@ class MessageRepository:
         self,
         conversation_id: UUID,
         is_from_user: bool,
-        message: str,
         index: int,
+        message: str = "",
+        image_url: str | None = None,
     ):
         """메시지를 저장하는 함수"""
 
@@ -105,6 +107,7 @@ class MessageRepository:
             is_from_user=is_from_user,
             message=message,
             index=index,
+            image_url=image_url,
         )
         self.session.add(new_message)
         await self.session.commit()

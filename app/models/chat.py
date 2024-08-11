@@ -1,7 +1,7 @@
 # 대화 관리 모델
 import uuid
 from datetime import datetime, date
-from sqlalchemy import Text, Integer, Boolean, Uuid, DateTime, Date, ForeignKey
+from sqlalchemy import Text, Integer, Boolean, Uuid, DateTime, Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.common import TimestampMixin
@@ -18,14 +18,13 @@ class Message(Base, TimestampMixin):
     message_timestamp: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
     )
+    image_url = mapped_column(String(256), nullable=True)
 
     conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=False)
 
     conversation: Mapped["Conversation"] = relationship(
         "Conversation", back_populates="messages"
     )  # 추가: Conversation 모델과의 관계 설정
-
-    images = relationship("Image", back_populates="message")
 
     @classmethod
     def create(
@@ -34,6 +33,8 @@ class Message(Base, TimestampMixin):
         is_from_user: bool,
         message: str,
         index: int,
+        image_url: str | None,
+        message_timestamp: datetime = datetime.utcnow(),
     ) -> "Message":
         """Create and return a new Message instance."""
         return cls(
@@ -41,6 +42,8 @@ class Message(Base, TimestampMixin):
             is_from_user=is_from_user,
             message=message,
             index=index,
+            image_url=image_url,
+            message_timestamp=message_timestamp,
         )
 
 

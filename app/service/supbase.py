@@ -18,6 +18,7 @@ class SupabaseService:
     async def upload_image(
         self,
         user_id: UUID,
+        conversation_id: UUID,
         file: UploadFile,
     ):
         if file is None or file.filename is None:
@@ -31,10 +32,17 @@ class SupabaseService:
             save_name=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
         )
 
+        print(f"supa image:{image}")
+
         # save image to db
         image = await self.image_repository.save_image(image=image)
 
+        print(f"db image:{image}")
+
         # link to conversaton table
+        await self.image_repository.upload_image(
+            conversation_id=conversation_id, image_id=image.id
+        )
 
         # return image_url
         image_url = await self.image_util.get_image_url_by_path(file_path=image.path)
