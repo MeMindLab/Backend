@@ -1,12 +1,10 @@
-import uuid
-from datetime import datetime, date
 from uuid import UUID
-from typing import List
+
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.report import Report, Tags, ReportSummary
+from app.models.report import Report, Tags, ReportSummary, DrawingDiary, Emotion
 from app.core.dependencies import get_db
 
 
@@ -31,3 +29,51 @@ class ReportRepository:
         await self.session.commit()
         await self.session.refresh(report_summary)
         return report_summary
+
+    async def create_drawing_diary(
+        self, image_url: str, image_title: str
+    ) -> DrawingDiary:
+        drawing_diary = DrawingDiary.create(image_url, image_title)
+        self.session.add(drawing_diary)
+        await self.session.commit()
+        await self.session.refresh(drawing_diary)
+        return drawing_diary
+
+    async def create_emotion(self, emotions: dict) -> Emotion:
+        emotion = Emotion.create(
+            comfortable_score=emotions["comfortable"],
+            happy_score=emotions["happy"],
+            sad_score=emotions["sadness"],
+            joyful_score=emotions["joyful"],
+            annoyed_score=emotions["annoyed"],
+            lethargic_score=emotions["lethargic"],
+        )
+
+        self.session.add(emotion)
+        await self.session.commit()
+        await self.session.refresh(emotion)
+        return emotion
+
+    async def update_emotion(self, emotion: Emotion) -> Emotion:
+        self.session.add(Emotion)
+        await self.session.commit()
+        await self.session.refresh(emotion)
+        return emotion
+
+    async def create_report(
+        self,
+        drawing_diary_id: UUID | None,
+        emotion_id: UUID,
+        report_summary_id: UUID,
+        conversation_id: UUID,
+    ) -> Report:
+        report = Report(
+            drawing_diary_id=drawing_diary_id,
+            emotion_id=emotion_id,
+            report_summary_id=report_summary_id,
+            conversation_id=conversation_id,
+        )
+        self.session.add(report)
+        await self.session.commit()
+        await self.session.refresh(report)
+        return report

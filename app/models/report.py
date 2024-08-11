@@ -29,6 +29,13 @@ class DrawingDiary(Base, TimestampMixin):
 
     reports = relationship("Report", back_populates="drawing_diary")
 
+    @classmethod
+    def create(cls, image_url: str, image_title: str):
+        return cls(
+            image_url=image_url,
+            image_title=image_title,
+        )
+
 
 class Emotion(Base, TimestampMixin):
     __tablename__ = "emotion"
@@ -37,13 +44,14 @@ class Emotion(Base, TimestampMixin):
     comfortable_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     happy_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     sad_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    fun_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    joyful_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     annoyed_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     lethargic_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    report_id = mapped_column(Uuid, ForeignKey("report.id"), nullable=False)
-
-    report = relationship("Report", back_populates="emotions", foreign_keys=[report_id])
+    report = relationship(
+        "Report",
+        back_populates="emotions",
+    )
 
     @hybrid_property
     def total_emotion_score(self) -> int:
@@ -51,7 +59,7 @@ class Emotion(Base, TimestampMixin):
             self.comfortable_score
             + self.happy_score
             + self.sad_score
-            + self.fun_score
+            + self.joyful_score
             + self.annoyed_score
             + self.lethargic_score
         )
@@ -62,7 +70,7 @@ class Emotion(Base, TimestampMixin):
             func.coalesce(cls.comfortable_score, 0)
             + func.coalesce(cls.happy_score, 0)
             + func.coalesce(cls.sad_score, 0)
-            + func.coalesce(cls.fun_score, 0)
+            + func.coalesce(cls.joyful_score, 0)
             + func.coalesce(cls.annoyed_score, 0)
             + func.coalesce(cls.lethargic_score, 0)
         )
@@ -86,7 +94,7 @@ class Emotion(Base, TimestampMixin):
                 func.coalesce(cls.sad_score / total * 100, 0.0), 2
             ),
             "fun_percent": func.round(
-                func.coalesce(cls.fun_score / total * 100, 0.0), 2
+                func.coalesce(cls.joyful_score / total * 100, 0.0), 2
             ),
             "annoyed_percent": func.round(
                 func.coalesce(cls.annoyed_score / total * 100, 0.0), 2
@@ -95,6 +103,25 @@ class Emotion(Base, TimestampMixin):
                 func.coalesce(cls.lethargic_score / total * 100, 0.0), 2
             ),
         }
+
+    @classmethod
+    def create(
+        cls,
+        comfortable_score: int,
+        happy_score: int,
+        sad_score: int,
+        joyful_score: int,
+        annoyed_score: int,
+        lethargic_score: int,
+    ) -> "Emotion":
+        return cls(
+            comfortable_score=comfortable_score,
+            happy_score=happy_score,
+            sad_score=sad_score,
+            joyful_score=joyful_score,
+            annoyed_score=annoyed_score,
+            lethargic_score=lethargic_score,
+        )
 
 
 class ReportSummary(Base, TimestampMixin):
@@ -129,7 +156,8 @@ class Report(Base, TimestampMixin):
     __tablename__ = "report"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     drawing_diary_id = mapped_column(
-        ForeignKey("drawing_diary.drawing_diary_id"), nullable=False
+        ForeignKey("drawing_diary.drawing_diary_id"),
+        nullable=True,
     )
     emotion_id = mapped_column(ForeignKey("emotion.id"), nullable=False)
     report_summary_id = mapped_column(ForeignKey("report_summary.id"), nullable=False)
@@ -143,7 +171,8 @@ class Report(Base, TimestampMixin):
         foreign_keys=[drawing_diary_id],
     )
     emotions = relationship(
-        "Emotion", back_populates="report", foreign_keys=[Emotion.report_id]
+        "Emotion",
+        back_populates="report",
     )
     report_summary = relationship(
         "ReportSummary",
