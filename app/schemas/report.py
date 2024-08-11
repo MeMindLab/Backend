@@ -28,6 +28,7 @@ class ReportBase(BaseModel):
     conversation_id: UUID
     drawing_diary_id: Optional[UUID] = None
     chat_history: List[Dict[str, str]]
+    images: List[str] = []
 
     class Config:
         from_attributes = True
