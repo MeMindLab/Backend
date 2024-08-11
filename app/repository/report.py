@@ -3,6 +3,8 @@ from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.models.report import Report, Tags, ReportSummary, DrawingDiary, Emotion
 from app.core.dependencies import get_db
@@ -39,8 +41,9 @@ class ReportRepository:
         await self.session.refresh(drawing_diary)
         return drawing_diary
 
-    async def create_emotion(self, emotions: dict) -> Emotion:
+    async def create_emotion(self, emotions: dict, sentiment: int) -> Emotion:
         emotion = Emotion.create(
+            total_score=sentiment,
             comfortable_score=emotions["comfortable"],
             happy_score=emotions["happy"],
             sad_score=emotions["sadness"],
@@ -77,3 +80,16 @@ class ReportRepository:
         await self.session.commit()
         await self.session.refresh(report)
         return report
+
+    async def get_report_by_conversation_id(self, conversation_id: UUID) -> Report:
+        query = (
+            select(Report)
+            .options(
+                selectinload(Report.emotions),
+                selectinload(Report.report_summary).selectinload(ReportSummary.tags),
+                selectinload(Report.drawing_diary),
+            )
+            .where(Report.conversation_id == conversation_id)
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
