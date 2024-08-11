@@ -18,6 +18,11 @@ class PromptGenerator:
         return loaded_prompt
 
     @staticmethod
+    def generate_emotion_prompt():
+        loaded_prompt = load_prompt("./app/prompt/emotion.yaml")
+        return loaded_prompt
+
+    @staticmethod
     def generate_chat_prompt() -> ChatPromptTemplate:
         # 사용자와 AI의 대화 예제를 기본 프롬프트로 생성합니다.
         example_prompt = ChatPromptTemplate.from_messages(

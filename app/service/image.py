@@ -1,9 +1,7 @@
 import os
 from urllib.parse import urlparse
+from fastapi import Depends
 
-from fastapi import Depends, HTTPException, status
-
-from app.models.image import Image
 from app.repository.image import ImageRepository
 from app.service.llm import OpenAIClient
 
@@ -26,25 +24,16 @@ class ImageService:
 
     async def generate_image(self, keywords: list[str]) -> str:
         client = self.openai_client.create_openai_instance()
-        keywords_test = "a white siamese cat and dog"
         keyword_string = ", ".join(keywords)
 
         prompt = f"""
-        Create an adorable and whimsical image based on the following keywords:
-
-        keywords:{keywords}
-        
-        A delightful and cozy illustration filled with charming elements related to the keywords. In the center, a friendly owl is serving a cup of hot,steaming decaf coffee to a smiling fox. The background is a whimsical autumn garden with a warm, golden sunset. Colorful leaves are falling, and there are miniature pumpkins and gourds scattered around. A small table is set with a plate of delicious, crispy chicken and a variety of tasty side dishes. The atmosphere is warm and inviting, with a sense of comfort and happiness. The use of soft colors and playful characters creates a heartwarming image that captures the essence of the user's experience. 
-        
-        The image should include:
-        
-        - Cute, playful characters or elements directly related to each keyword
-        - Soft pastel colors and gentle lighting to enhance the cuteness
-        
+        Create a whimsical image based on these keywords
+        Keywords:{keyword_string}
+    
+        A delightful image filled with elements related to the keywords. 
+        - It should have a landscape painting feel and be colorful and related to your keywords, and it would be nice to have some natural or topographical elements added.
         
         Make sure each keyword is clearly represented. 
-        The style is cute and cartoonish, reminiscent of a delightful children's illustration.
-
         """
 
         response = await client.images.generate(

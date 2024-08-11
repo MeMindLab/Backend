@@ -2,8 +2,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from app.repository.report import ReportRepository
-from app.service.report import KeywordExtractor
-from app.service.report.summary import SummaryExtractor
+from app.service.report import KeywordExtractor, EmotionExtractor, SummaryExtractor
 
 
 class ReportService:
@@ -11,36 +10,38 @@ class ReportService:
         self,
         keyword_extractor: KeywordExtractor = Depends(KeywordExtractor),
         summary_extractor: SummaryExtractor = Depends(SummaryExtractor),
+        emotion_extractor: EmotionExtractor = Depends(EmotionExtractor),
         report_repository: ReportRepository = Depends(ReportRepository),
     ):
         self.keyword_extractor = keyword_extractor
         self.summary_extractor = summary_extractor
+        self.emotion_extractor = emotion_extractor
         self.report_repository = report_repository
 
     async def create_report(self, conversation_id: UUID):
-        # Step 1: DrawingDiary 생성
-
         keywords_result = await self.keyword_extractor.get_keywords(conversation_id)
         keywords = keywords_result["keywords"]
 
         summary_result = await self.summary_extractor.get_summary(conversation_id)
         summary = summary_result["summary"]
 
-        # 4. 보고서 생성 및 저장
+        emotion_result = await self.emotion_extractor.get_emotions(conversation_id)
 
-        # Step 2: ReportSummary 생성
+        report_summary = await self.report_repository.create_report_summary(summary)
+        await self.report_repository.create_tags(keywords, report_summary.id)
+        emotion = await self.report_repository.create_emotion(
+            emotions=emotion_result["emotions"]
+        )
 
-        # report_summary = await self.report_repository.create_report_summary(summary)
-        # await self.report_repository.create_tags(keywords, report_summary.id)
-
-        # Step 3: Tags 생성 및 ReportSummary와 연결
-
-        # Step 4: Emotion 생성
-
-        # Step 5: Report 생성
+        report = await self.report_repository.create_report(
+            drawing_diary_id=None,
+            emotion_id=emotion.id,
+            report_summary_id=report_summary.id,
+            conversation_id=conversation_id,
+        )
 
         # 최종 리턴 값
         return {
-            "report_id": "report id soon add",
+            "report_id": report.id,
             "keyword": keywords,
         }
