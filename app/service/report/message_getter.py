@@ -22,7 +22,7 @@ class MessageGetter:
         message_list = [
             {
                 "role": "user" if message.is_from_user else "ai",
-                "content": message.message,
+                "content": message.message if message.message else message.image_url,
             }
             for message in conversation
         ]
