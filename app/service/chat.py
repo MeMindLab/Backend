@@ -4,7 +4,10 @@ from datetime import date
 
 from app.core.dependencies import get_db
 from app.repository.chat import ConversationRepository, MessageRepository
+from app.service.image import ImageService
 from app.service.llm import OpenAIClient, PromptGenerator, ConversationChain
+from app.schemas.chat import MessageBase
+from app.utils.image import ImageUtil
 
 
 class EnoughJudge:
@@ -19,6 +22,7 @@ class MessageService:
         session=Depends(get_db),
         openai_chat_client: OpenAIClient = Depends(OpenAIClient),
         message_repository: MessageRepository = Depends(),
+        image_service: ImageService = Depends(),
     ):
         self.session = session
         self.llm = openai_chat_client.chat_instance
@@ -28,6 +32,7 @@ class MessageService:
             llm=self.llm,
             prompt=self.chat_prompt,
         )
+        self.image_service = image_service
 
     async def get_messages_from_ai(self, text: str):
         try:
@@ -52,12 +57,8 @@ class MessageService:
 
         if is_image and image_url:
             # 이미지 메세지 처리
-
-            await self.message_repository.create_message(
-                conversation_id=conversation_id,
-                is_from_user=True,
-                index=order + 1,
-                image_url=image_url,
+            await self.image_service.handle_image_message(
+                url=image_url, conversation_id=conversation_id, index=order + 1
             )
 
             # 대화 기록에 이미지를 추가했으므로 챗봇의 메모리에 추가할 필요는 없음.
@@ -109,11 +110,13 @@ class ConversationService:
             ConversationRepository
         ),
         message_service: MessageService = Depends(),
+        image_utils: ImageUtil = Depends(),
     ):
         self.session = session
         self.conversation_repository = conversation_repository
         self.message_repository = message_repository
         self.message_service = message_service
+        self.image_utils = image_utils
 
     async def get_monthly_conversations(self, year: int, month: int, user_id: UUID):
         # 해당 월의 대화 리스트 가져오기
@@ -144,9 +147,28 @@ class ConversationService:
                 existing_conversation.id
             )
 
+            image_urls = [
+                await self.image_utils.get_image_url_by_path(message.image[0].path)
+                if message.image
+                else None
+                for message in chat_history
+            ]
+
+            chat_history_list = [
+                MessageBase(
+                    is_from_user=message.is_from_user,
+                    order=message.index,
+                    message_id=message.id,
+                    message_timestamp=message.message_timestamp,
+                    message=message.message,
+                    image_url=image_urls[i],
+                )
+                for i, message in enumerate(chat_history)
+            ]
+
             return {
                 "conversation_id": existing_conversation.id,
-                "chat_history": chat_history,
+                "chat_history": chat_history_list,
                 "is_enough": EnoughJudge.is_enough(len(chat_history)),
             }
         else:
@@ -171,8 +193,19 @@ class ConversationService:
                 new_conversation.id
             )
 
+            chat_history_list = [
+                MessageBase(
+                    is_from_user=message.is_from_user,
+                    order=message.index,
+                    message_id=message.id,
+                    message_timestamp=message.message_timestamp,
+                    message=message.message,
+                )
+                for message in chat_history
+            ]
+
             return {
                 "conversation_id": new_conversation.id,
-                "chat_history": chat_history,
+                "chat_history": chat_history_list,
                 "is_enough": EnoughJudge.is_enough(len(chat_history)),
             }

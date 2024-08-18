@@ -1,6 +1,7 @@
 import os
 import uuid
 import io
+from urllib.parse import urlparse
 from PIL import Image
 from fastapi import Depends
 from typing import BinaryIO
@@ -21,6 +22,21 @@ class ImageUtil:
             supabase_key=config.SUPABASE_KEY,
             supabase_url=config.SUPABASE_URL,
         )
+
+    def extract_path_and_extension(self, url: str) -> tuple[str, str]:
+        # URL에서 경로 추출
+        parsed_url = urlparse(url)
+        path = parsed_url.path
+
+        filename = path.split("/")[-1]
+        extension = filename.split(".")[-1] if "." in filename else ""
+
+        path_parts = path.split("/")
+        if "Images" in path_parts:
+            index = path_parts.index("Images")
+            path = "/".join(path_parts[index:])
+
+        return path, extension
 
     async def get_image_url_by_path(self, file_path: str):
         image_url = await self.supabase_client.storage.from_(

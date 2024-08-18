@@ -22,6 +22,9 @@ class Image(Base, TimestampMixin):
     conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=True)
     conversation = relationship("Conversation", back_populates="images")
 
+    message_id = mapped_column(ForeignKey("messages.id"), nullable=True)
+    message = relationship("Message", back_populates="image")
+
     @classmethod
     def create(
         cls,

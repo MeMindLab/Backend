@@ -7,6 +7,7 @@ from app.core.database import Base
 from app.models.common import TimestampMixin
 
 from app.models.user import User
+from app.models.image import Image
 
 
 class Message(Base, TimestampMixin):
@@ -18,13 +19,14 @@ class Message(Base, TimestampMixin):
     message_timestamp: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
     )
-    image_url = mapped_column(String(256), nullable=True)
 
     conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=False)
 
     conversation: Mapped["Conversation"] = relationship(
         "Conversation", back_populates="messages"
     )  # 추가: Conversation 모델과의 관계 설정
+
+    image = relationship("Image", back_populates="message")
 
     @classmethod
     def create(
@@ -33,16 +35,14 @@ class Message(Base, TimestampMixin):
         is_from_user: bool,
         message: str,
         index: int,
-        image_url: str | None,
         message_timestamp: datetime = datetime.utcnow(),
-    ) -> "Message":
-        """Create and return a new Message instance."""
+    ):
+        """Create and return a new MessageBase instance."""
         return cls(
             conversation_id=conversation_id,
             is_from_user=is_from_user,
             message=message,
             index=index,
-            image_url=image_url,
             message_timestamp=message_timestamp,
         )
 
@@ -60,7 +60,7 @@ class Conversation(Base, TimestampMixin):
     reports = relationship("Report", back_populates="conversation")
     messages = relationship(
         "Message", back_populates="conversation"
-    )  # 추가: Message 모델과의 양방향 관계 설정
+    )  # 추가: MessageBase 모델과의 양방향 관계 설정
 
     @classmethod
     def create(cls, date: date, user_id: uuid.UUID) -> "Conversation":

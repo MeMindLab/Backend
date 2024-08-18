@@ -28,7 +28,7 @@ class SupabaseService:
         image = await self.image_util.upload_image_storage(
             file=file.file,
             filename=file.filename,
-            path=f"Images/{user_id}",  # file path to add conversation id
+            path=f"Images/{user_id}/{conversation_id}",  # file path to add conversation id
             save_name=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
         )
 
