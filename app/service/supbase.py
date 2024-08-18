@@ -20,15 +20,22 @@ class SupabaseService:
         user_id: UUID,
         conversation_id: UUID,
         file: UploadFile,
+        is_drawing: bool = False,
     ):
         if file is None or file.filename is None:
             raise HTTPException(status_code=400, detail="File is required")
+
+        path = (
+            f"Images/{user_id}/{conversation_id}/drawing"
+            if is_drawing
+            else f"Images/{user_id}/{conversation_id}"
+        )
 
         # image upload
         image = await self.image_util.upload_image_storage(
             file=file.file,
             filename=file.filename,
-            path=f"Images/{user_id}/{conversation_id}",  # file path to add conversation id
+            path=path,  # file path to add conversation id
             save_name=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
         )
 

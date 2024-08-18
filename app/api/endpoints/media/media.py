@@ -17,19 +17,27 @@ class ImageUploadResponse(BaseModel):
     image_url: str
 
 
+class UploadImageRequest(BaseModel):
+    conversation_id: UUID
+    is_drawing: bool
+
+
 @media_module.post("/upload", status_code=200)
 async def upload_image(
-    conversation_id: UUID,
+    upload_req: UploadImageRequest = Depends(),
     file: UploadFile = File(...),
     supabase: SupabaseService = Depends(),
     auth: UUID = Depends(get_current_user),
 ):
     uploaded_url = await supabase.upload_image(
-        user_id=auth, conversation_id=conversation_id, file=file
+        user_id=auth,
+        conversation_id=upload_req.conversation_id,
+        file=file,
+        is_drawing=upload_req.is_drawing,
     )
 
     return ImageUploadResponse(
-        conversation_id=conversation_id,
+        conversation_id=upload_req.conversation_id,
         image_url=uploaded_url,
     )
 
@@ -47,6 +55,15 @@ async def generate_image(
     return result
 
 
+class UpdateImageRequest(BaseModel):
+    conversation_id: UUID
+    image_url: str
+    image_title: str
+
+
 @media_module.post("/update-image", status_code=200)
-async def update_dalle_image():
+async def update_dalle_image(
+    updqte_request: UpdateImageRequest = Depends(),
+    auth: UUID = Depends(get_current_user),
+):
     pass
