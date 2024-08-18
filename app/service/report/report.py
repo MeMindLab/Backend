@@ -65,7 +65,7 @@ class ReportService:
             report_summary=report_summary,
             emotions=emotions_base,
             conversation_id=report.conversation_id,
-            drawing_diary_id=report.drawing_diary_id,
+            drawing_diary=report.drawing_diary,
             chat_history=chat_history,
             images=image_urls,
         )
