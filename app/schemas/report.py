@@ -27,12 +27,20 @@ class ReportChatMessageBase(BaseModel):
     is_image: bool
 
 
+class DrawingDiaryBase(BaseModel):
+    image_url: str
+    image_title: str
+
+    class Config:
+        from_attributes = True
+
+
 class ReportBase(BaseModel):
     report_id: UUID
     report_summary: ReportSummaryBase
     emotions: EmotionBase
     conversation_id: UUID
-    drawing_diary_id: Optional[UUID] = None
+    drawing_diary: Optional[DrawingDiaryBase] = None
     chat_history: List[ReportChatMessageBase]
     images: List[str] = []
 
