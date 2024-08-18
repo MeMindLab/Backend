@@ -32,12 +32,8 @@ class SupabaseService:
             save_name=datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
         )
 
-        print(f"supa image:{image}")
-
         # save image to db
         image = await self.image_repository.save_image(image=image)
-
-        print(f"db image:{image}")
 
         # link to conversaton table
         await self.image_repository.upload_image(

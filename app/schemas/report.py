@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 from uuid import UUID
 
@@ -21,13 +21,19 @@ class ReportSummaryBase(BaseModel):
     tags: List[str]
 
 
+class ReportChatMessageBase(BaseModel):
+    role: str
+    content: Union[str, None]
+    is_image: bool
+
+
 class ReportBase(BaseModel):
     report_id: UUID
     report_summary: ReportSummaryBase
     emotions: EmotionBase
     conversation_id: UUID
     drawing_diary_id: Optional[UUID] = None
-    chat_history: List[Dict[str, str]]
+    chat_history: List[ReportChatMessageBase]
     images: List[str] = []
 
     class Config:

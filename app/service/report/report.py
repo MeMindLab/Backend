@@ -4,6 +4,7 @@ from fastapi import Depends
 from app.repository.report import ReportRepository
 from app.service.report import KeywordExtractor, EmotionExtractor, SummaryExtractor
 from app.schemas.report import ReportSummaryBase, EmotionBase, ReportBase
+from app.utils.image import ImageUtil
 from .message_getter import MessageGetter
 
 
@@ -15,12 +16,14 @@ class ReportService:
         emotion_extractor: EmotionExtractor = Depends(EmotionExtractor),
         report_repository: ReportRepository = Depends(ReportRepository),
         message_getter: MessageGetter = Depends(MessageGetter),
+        image_util: ImageUtil = Depends(ImageUtil),
     ):
         self.keyword_extractor = keyword_extractor
         self.summary_extractor = summary_extractor
         self.emotion_extractor = emotion_extractor
         self.report_repository = report_repository
         self.message_getter = message_getter
+        self.image_util = image_util
 
     async def get_daily_report(self, conversation_id: UUID):
         report = await self.report_repository.get_report_by_conversation_id(
@@ -49,6 +52,14 @@ class ReportService:
             total_score=emotion.total_score,
         )
 
+        images = await self.report_repository.get_images_by_conversation_id(
+            conversation_id
+        )
+
+        image_urls = [
+            await self.image_util.get_image_url_by_path(image.path) for image in images
+        ]
+
         response = ReportBase(
             report_id=report.id,
             report_summary=report_summary,
@@ -56,6 +67,7 @@ class ReportService:
             conversation_id=report.conversation_id,
             drawing_diary_id=report.drawing_diary_id,
             chat_history=chat_history,
+            images=image_urls,
         )
 
         return response

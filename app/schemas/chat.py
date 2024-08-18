@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import datetime, date
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -14,9 +14,9 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     conversation_id: UUID
-    message: str
-    image_url: str
-    is_image: bool
+    message: Optional[str] = ""
+    image_url: Optional[str] = None
+    is_image: Optional[bool] = None
 
 
 class ChatResult(BaseModel):
