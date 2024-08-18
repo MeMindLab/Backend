@@ -9,9 +9,10 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import mapped_column, relationship
 from app.core.database import Base
+from app.models.common import TimestampMixin
 
 
-class Image(Base):
+class Image(Base, TimestampMixin):
     __tablename__ = "images"
 
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)

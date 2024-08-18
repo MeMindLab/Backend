@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.models.report import Report, Tags, ReportSummary, DrawingDiary, Emotion
+from app.models.image import Image
 from app.core.dependencies import get_db
 
 
@@ -93,3 +94,12 @@ class ReportRepository:
         )
         result = await self.session.execute(query)
         return result.scalars().first()
+
+    async def get_images_by_conversation_id(self, conversation_id: UUID):
+        query = (
+            select(Image)
+            .where(Image.conversation_id == conversation_id)
+            .order_by(Image.created_at)
+        )
+        result = await self.session.execute(query)
+        return result.scalars().all()

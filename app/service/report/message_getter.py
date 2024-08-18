@@ -11,7 +11,7 @@ class MessageGetter:
     ):
         self.message_repository = message_repository
 
-    async def get_chat_history(self, conversation_id: UUID) -> list[dict[str, str]]:
+    async def get_chat_history(self, conversation_id: UUID):
         """Retrieve and format chat history for LangChain"""
 
         conversation = await self.message_repository.get_messages(conversation_id)
@@ -23,6 +23,7 @@ class MessageGetter:
             {
                 "role": "user" if message.is_from_user else "ai",
                 "content": message.message if message.message else message.image_url,
+                "is_image": True if message.image_url else False,
             }
             for message in conversation
         ]
