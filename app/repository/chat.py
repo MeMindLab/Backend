@@ -7,6 +7,7 @@ from fastapi import Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.models.chat import Conversation, Message
 from app.core.dependencies import get_db
@@ -77,20 +78,13 @@ class MessageRepository:
     async def get_messages(self, conversation_id: UUID) -> List[Message]:
         """해당 conversation에서 나누었던 message들을 모두 리턴하는 함수"""
 
-        query = select(Message).filter(Message.conversation_id == conversation_id)
+        query = (
+            select(Message)
+            .options(selectinload(Message.image))
+            .filter(Message.conversation_id == conversation_id)
+        )
         result = await self.session.execute(query)
-
-        return [
-            Message(
-                id=row.id,
-                conversation_id=row.conversation_id,
-                is_from_user=row.is_from_user,
-                message=row.message,
-                index=row.index,
-                image_url=row.image_url,
-            )
-            for row in result.scalars().all()
-        ]
+        return result.scalars().all()
 
     async def create_message(
         self,
@@ -98,7 +92,6 @@ class MessageRepository:
         is_from_user: bool,
         index: int,
         message: str = "",
-        image_url: str | None = None,
     ):
         """메시지를 저장하는 함수"""
 
@@ -107,7 +100,6 @@ class MessageRepository:
             is_from_user=is_from_user,
             message=message,
             index=index,
-            image_url=image_url,
         )
         self.session.add(new_message)
         await self.session.commit()

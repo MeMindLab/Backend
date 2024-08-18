@@ -4,12 +4,13 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class Message(BaseModel):
+class MessageBase(BaseModel):
     is_from_user: bool
     order: int
-    message_id: int
+    message_id: UUID
     message_timestamp: datetime
     message: str
+    image_url: Optional[str]
 
 
 class ChatRequest(BaseModel):
@@ -35,7 +36,7 @@ class ConversationRequest(BaseModel):
 class ConversationResponse(BaseModel):
     conversation_id: str
     is_enough: bool
-    chat_history: List[Message]
+    chat_history: List[MessageBase]
 
 
 class ConversationBase(BaseModel):
