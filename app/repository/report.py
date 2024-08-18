@@ -103,3 +103,9 @@ class ReportRepository:
         )
         result = await self.session.execute(query)
         return result.scalars().all()
+
+    async def update_report(self, report: Report) -> Report:
+        self.session.add(report)
+        await self.session.commit()
+        await self.session.refresh(report)
+        return report

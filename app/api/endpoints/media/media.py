@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, UploadFile, Depends, File
 from app.service.supbase import SupabaseService
 from app.service.image import ImageService
+from app.service.drawing_diary import DrawingDiaryService
 from app.auth.authenticate import get_current_user
 
 from pydantic import BaseModel
@@ -61,9 +62,19 @@ class UpdateImageRequest(BaseModel):
     image_title: str
 
 
+class UpdateImageResponse(BaseModel):
+    message: str
+
+
 @media_module.post("/update-image", status_code=200)
 async def update_dalle_image(
-    updqte_request: UpdateImageRequest = Depends(),
-    auth: UUID = Depends(get_current_user),
+    update_request: UpdateImageRequest = Depends(),
+    drawing_service: DrawingDiaryService = Depends(),
 ):
-    pass
+    await drawing_service.create_drawing_diary(
+        image_url=update_request.image_url,
+        conversation_id=update_request.conversation_id,
+        image_title=update_request.image_title,
+    )
+
+    return UpdateImageResponse(message="success to save")
