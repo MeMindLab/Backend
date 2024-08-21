@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 from fastapi import APIRouter, UploadFile, Depends, Path
 from app.auth.authenticate import get_current_user
 from pydantic import BaseModel, Field
@@ -58,6 +59,7 @@ class ReportListResponse(ListResponseBase):
         tags: list[str]
         ai_summary: str
         thumbnail: Optional[str] = None
+        created_at: datetime = Field(default_factory=datetime.utcnow)
 
     reports: list[Report]
 
@@ -72,24 +74,24 @@ async def search_reports(
         limit=q.limit,
         cursor=q.cursor,
     )
-    # next_cursor = reports[-1].id if len(reports) >= q.limit else None
+    next_cursor = reports[-1].id if len(reports) >= q.limit else None
 
-    return {
-        reports: "repors soon",
-        #   "next_cursor": next_cursor,
-    }
-
-    # return ReportListResponse(
-    #     reports=[
-    #         ReportListResponse.Report(
-    #             id=report.id,
-    #             tags=[tag for tag in report.report_summary.tags],
-    #             ai_summary=report.report_summary.contents,  # 예시로 추가된 필드
-    #             thumbnail=report.drawing_diary.image_url
-    #             if report.drawing_diary
-    #             else None,
-    #         )
-    #         for report in reports
-    #     ],
-    #     next_cursor=next_cursor,
-    # )
+    return ReportListResponse(
+        reports=[
+            ReportListResponse.Report(
+                id=report.id,
+                tags=[
+                    tag
+                    for tags_object in report.report_summary.tags
+                    for tag in tags_object.tags
+                ],
+                ai_summary=report.report_summary.contents,
+                thumbnail=report.drawing_diary.image_url
+                if report.drawing_diary
+                else None,
+                created_at=report.created_at,
+            )
+            for report in reports
+        ],
+        next_cursor=next_cursor,
+    )
