@@ -100,3 +100,12 @@ class ReportService:
             "report_id": report.id,
             "keyword": keywords,
         }
+
+    async def get_search_reports(
+        self, keywords, limit: int, cursor: UUID | None = None
+    ):
+        result = await self.report_repository.get_search_reports(
+            keywords, limit=limit, cursor=cursor
+        )
+
+        return result
