@@ -10,9 +10,9 @@ from sqlalchemy import (
     String,
     ForeignKey,
     Text,
-    func,
 )
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.postgresql import JSONB
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.common import TimestampMixin
@@ -114,7 +114,7 @@ class ReportSummary(Base, TimestampMixin):
 class Tags(Base, TimestampMixin):
     __tablename__ = "tags"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
-    tags = mapped_column(type_=JSON, nullable=False)
+    tags = mapped_column(type_=JSONB, nullable=False)
     report_summary_id = mapped_column(
         Uuid, ForeignKey("report_summary.id"), nullable=False
     )

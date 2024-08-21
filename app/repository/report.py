@@ -3,8 +3,9 @@ from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, or_, text
+from sqlalchemy.orm import selectinload, joinedload
+
 
 from app.models.report import Report, Tags, ReportSummary, DrawingDiary, Emotion
 from app.models.image import Image
@@ -109,3 +110,67 @@ class ReportRepository:
         await self.session.commit()
         await self.session.refresh(report)
         return report
+
+    async def get_search_reports(
+        self,
+        keywords: str,
+        limit: int,
+        cursor: UUID | None = None,
+    ):
+        # 키워드로 필터링 쿼리 준비
+
+        keyword_list = [keyword.strip() for keyword in keywords.split(" ")]
+        print(keyword_list)
+
+        # keyword_filter = or_(
+        #     *[Tags.tags.contains([keyword]) for keyword in keyword_list]
+        # )
+
+        # JSON 배열을 위한 필터를 생성
+        keyword_filters = [
+            text(f"tags.tags::text LIKE '%{keyword}%'") for keyword in keyword_list
+        ]
+        print(f"key filter:{keyword_filters}")
+
+        # OR 연산자로 필터 결합
+        keyword_filter = or_(*keyword_filters)
+
+        print(f"key filter sql :{keyword_filter}")
+
+        # 키워드를 포함하는 Tags 레코드를 찾기
+        tags_query = select(Tags).where(keyword_filter)
+        tags_result = await self.session.execute(tags_query)
+        tags = tags_result.scalars().all()
+
+        print(tags)
+
+        # 찾은 Tags에서 관련 ReportSummary ID를 추출
+        report_summary_ids = {tag.report_summary_id for tag in tags}
+
+        # ReportSummary IDs를 사용하여 Report 찾기
+
+        # query = (
+        #     select(Report)
+        #     .join(ReportSummary, Report.report_summary_id == ReportSummary.id)
+        #     .outerjoin(
+        #         DrawingDiary, Report.drawing_diary_id == DrawingDiary.drawing_diary_id
+        #     )
+        #     .where(Report.report_summary_id.in_(report_summary_ids))
+        #     .options(
+        #         joinedload(Report.report_summary).joinedload(ReportSummary.tags),
+        #         joinedload(Report.drawing_diary),
+        #     )
+        # )
+        #
+        # if cursor is not None:
+        #     query = query.where(Report.id > cursor)
+        #
+        # # 쿼리 정렬 및 결과 수 제한
+        # query = query.order_by(Report.created_at.desc()).limit(limit)
+        #
+        # # 쿼리 실행
+        # result = await self.session.execute(query)
+        # reports = result.scalars().all()
+        #
+        # return reports
+        pass
