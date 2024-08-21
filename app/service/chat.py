@@ -140,8 +140,6 @@ class ConversationService:
         existing_conversation = await self.get_conversation(diary_date, user_id)
 
         if existing_conversation:
-            print(existing_conversation)
-
             # 기존 대화가 있는 경우, 대화 기록을 가져옵니다.
             chat_history = await self.message_repository.get_messages(
                 existing_conversation.id
@@ -200,6 +198,7 @@ class ConversationService:
                     message_id=message.id,
                     message_timestamp=message.message_timestamp,
                     message=message.message,
+                    image_url=None,
                 )
                 for message in chat_history
             ]
