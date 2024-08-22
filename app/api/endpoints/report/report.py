@@ -1,8 +1,7 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import date, datetime
 from fastapi import APIRouter, Path, Query, Depends
 from app.auth.authenticate import get_current_user
-from pydantic import BaseModel, Field
 from typing import Optional
 
 from app.service.report.report import ReportService
@@ -10,12 +9,14 @@ from app.schemas.report import (
     ReportListRequest,
     ReportListResponse,
     ReportCreateRequest,
+    ReportCreateResponse,
+    WeeklyScoresResponse,
 )
 
 report_module = APIRouter(prefix="")
 
 
-@report_module.post("/create-daily")
+@report_module.post("/create-daily", response_model=ReportCreateResponse)
 async def create_report(
     report_input: ReportCreateRequest,
     auth: UUID = Depends(get_current_user),
@@ -39,7 +40,7 @@ async def get_reports(
     return result
 
 
-@report_module.post("/search")
+@report_module.post("/search", response_model=ReportListResponse)
 async def search_reports(
     q: ReportListRequest = Depends(),
     report_service: ReportService = Depends(),
@@ -72,7 +73,7 @@ async def search_reports(
     )
 
 
-@report_module.get("/monthly-reports")
+@report_module.get("/monthly-reports", response_model=ReportListResponse)
 async def monthly_reports_handler(
     year: int = Query(..., description="Year of the reports"),
     month: int = Query(..., description="Month of the reports"),
@@ -102,3 +103,14 @@ async def monthly_reports_handler(
         ],
         next_cursor=next_cursor,
     )
+
+
+@report_module.get("/weekly-scores")
+async def weekly_scores_handler(
+    target_date: date = Query(
+        datetime.utcnow().date(), description="Date in YYYY-MM-DD format"
+    ),
+    report_service: ReportService = Depends(),
+):
+    results = await report_service.get_weekly_scores(target_date)
+    return WeeklyScoresResponse(results=results)

@@ -1,9 +1,16 @@
 from uuid import UUID
+from datetime import date
 from fastapi import Depends
 
 from app.repository.report import ReportRepository
 from app.service.report import KeywordExtractor, EmotionExtractor, SummaryExtractor
-from app.schemas.report import ReportSummaryBase, EmotionBase, ReportBase
+from app.schemas.report import (
+    ReportSummaryBase,
+    EmotionBase,
+    ReportBase,
+    ReportCreateResponse,
+    WeeklyScore,
+)
 from app.utils.image import ImageUtil
 from .message_getter import MessageGetter
 
@@ -25,7 +32,7 @@ class ReportService:
         self.message_getter = message_getter
         self.image_util = image_util
 
-    async def get_daily_report(self, conversation_id: UUID):
+    async def get_daily_report(self, conversation_id: UUID) -> ReportBase:
         report = await self.report_repository.get_report_by_conversation_id(
             conversation_id
         )
@@ -72,7 +79,7 @@ class ReportService:
 
         return response
 
-    async def create_report(self, conversation_id: UUID):
+    async def create_report(self, conversation_id: UUID) -> ReportCreateResponse:
         keywords_result = await self.keyword_extractor.get_keywords(conversation_id)
         keywords = keywords_result["keywords"]
 
@@ -95,11 +102,10 @@ class ReportService:
             conversation_id=conversation_id,
         )
 
-        # 최종 리턴 값
-        return {
-            "report_id": report.id,
-            "keyword": keywords,
-        }
+        return ReportCreateResponse(
+            report_id=report.id,
+            keyword=keywords,
+        )
 
     async def get_search_reports(
         self, keywords, limit: int, cursor: UUID | None = None
@@ -118,3 +124,15 @@ class ReportService:
         )
 
         return reports
+
+    async def get_weekly_scores(self, target_date: date) -> list[WeeklyScore]:
+        reports = await self.report_repository.get_weekly_scores(target_date)
+
+        weekly_scores = [
+            WeeklyScore(
+                date=report.created_at.strftime("%m/%d"),
+                score=report.emotions.total_score if report.emotions else 0,
+            )
+            for report in reports
+        ]
+        return weekly_scores

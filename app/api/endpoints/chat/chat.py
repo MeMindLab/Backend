@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Depends
 
 from app.schemas.chat import (
     ChatRequest,
