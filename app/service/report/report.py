@@ -109,3 +109,12 @@ class ReportService:
         )
 
         return result
+
+    async def get_monthly_reports(self, year: int, month: int):
+        # 해당 월의 대화 리스트 가져오기
+        reports = await self.report_repository.get_monthly_reports(
+            month=month,
+            year=year,
+        )
+
+        return reports
