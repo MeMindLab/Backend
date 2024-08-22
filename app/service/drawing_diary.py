@@ -32,23 +32,19 @@ class DrawingDiaryService:
         if not image_url or not image_title:
             raise HTTPException(status_code=400, detail="Invalid image url or title")
 
-        try:
+        existing_report = await self.report_repository.get_report_by_conversation_id(
+            conversation_id
+        )
+        if not existing_report:
+            raise HTTPException(status_code=404, detail="Report not found")
+
             # Create DrawingDiary instance
-            drawing_diary = DrawingDiary.create(
-                image_url=image_url, image_title=image_title
-            )
+        drawing_diary = DrawingDiary.create(
+            image_url=image_url, image_title=image_title
+        )
 
-            # Save to repository
-            await self.drawing_diary_repository.save_drawing_diary(drawing_diary)
+        # Save to repository
+        await self.drawing_diary_repository.save_drawing_diary(drawing_diary)
 
-            existing_report = await self.report_repository.get_report(conversation_id)
-
-            existing_report.drawing_diary = drawing_diary.drawing_diary_id
-
-            await self.report_repository.update_report(existing_report)
-
-        except Exception as e:
-            # Handle any errors during the save or update process
-            raise HTTPException(
-                status_code=500, detail="Failed to process drawing diary and report"
-            )
+        existing_report.drawing_diary_id = drawing_diary.drawing_diary_id
+        await self.report_repository.update_report(existing_report)
