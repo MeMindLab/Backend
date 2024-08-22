@@ -1,5 +1,5 @@
 from uuid import UUID
-
+from datetime import datetime, timedelta
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -132,18 +132,6 @@ class ReportRepository:
 
         # ReportSummary IDs를 사용하여 Report 찾기
 
-        # query = (
-        #     select(Report)
-        #     .join(ReportSummary, Report.report_summary_id == ReportSummary.id)
-        #     .outerjoin(
-        #         DrawingDiary, Report.drawing_diary_id == DrawingDiary.drawing_diary_id
-        #     )
-        #     .where(Report.report_summary_id.in_(report_summary_ids))
-        #     .options(
-        #         selectinload(Report.report_summary).selectinload(ReportSummary.tags)
-        #     )
-        # )
-
         query = (
             select(Report)
             .join(ReportSummary, Report.report_summary_id == ReportSummary.id)
@@ -168,3 +156,30 @@ class ReportRepository:
         reports = result.scalars().all()
 
         return reports
+
+    async def get_monthly_reports(self, month: int, year: int):
+        # 월의 시작일과 마지막일 계산
+        start_date = datetime(year, month, 1)
+        end_date = start_date + timedelta(days=31)
+        end_date = end_date.replace(day=1)  # 다음 달의 첫째 날로 설정
+
+        # 월별 레포트 쿼리
+        query = (
+            select(Report)
+            .join(ReportSummary, Report.report_summary_id == ReportSummary.id)
+            .outerjoin(
+                DrawingDiary, Report.drawing_diary_id == DrawingDiary.drawing_diary_id
+            )
+            .where(Report.created_at >= start_date, Report.created_at < end_date)
+            .options(
+                selectinload(Report.report_summary).selectinload(
+                    ReportSummary.tags
+                ),  # ReportSummary와 관련된 tags 로드
+                selectinload(Report.drawing_diary),  # DrawingDiary 로드
+            )
+        )
+
+        # 쿼리 실행
+        results = await self.session.execute(query)
+
+        return results.scalars().all()
