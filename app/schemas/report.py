@@ -53,6 +53,11 @@ class ReportCreateRequest(BaseModel):
     conversation_id: UUID
 
 
+class ReportCreateResponse(BaseModel):
+    report_id: UUID
+    keyword: List[str]
+
+
 class ListRequestBase(BaseModel):
     limit: int = Field(20, ge=1, le=20)
     cursor: str | None = Field(None, max_length=100)
@@ -75,3 +80,12 @@ class ReportListResponse(ListResponseBase):
         created_at: datetime = Field(default_factory=datetime.utcnow)
 
     reports: list[Report]
+
+
+class WeeklyScore(BaseModel):
+    date: str
+    score: float
+
+
+class WeeklyScoresResponse(BaseModel):
+    results: list[WeeklyScore]

@@ -1,9 +1,9 @@
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, text
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import selectinload, joinedload
 
 
@@ -180,6 +180,25 @@ class ReportRepository:
         )
 
         # 쿼리 실행
+        results = await self.session.execute(query)
+
+        return results.scalars().all()
+
+    async def get_weekly_scores(self, target_date: date):
+        start_of_week = target_date - timedelta(
+            days=6
+        )  # 7 days including the target_date
+        end_of_week = target_date
+
+        query = (
+            select(Report)
+            .options(joinedload(Report.emotions))  # Eager load the Emotion relationship
+            .filter(
+                Report.created_at >= start_of_week, Report.created_at <= end_of_week
+            )
+            .order_by(Report.created_at)
+        )
+
         results = await self.session.execute(query)
 
         return results.scalars().all()
