@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.core.dependencies import get_db
 from app.models.image import Image
@@ -15,6 +15,21 @@ class ImageRepository:
         await self.session.commit()
         await self.session.refresh(image)
         return image
+
+    async def delete_image(self, image_id: UUID):
+        query = delete(Image).where(Image.id == image_id)
+        await self.session.execute(query)
+        await self.session.commit()
+
+    async def delete_image_by_message_id(self, message_id: UUID):
+        try:
+            query = delete(Image).where(Image.message_id == message_id)
+            await self.session.execute(query)
+            await self.session.commit()
+        except Exception as e:
+            await self.session.rollback()
+            print(f"Error during images deletion: {e}")
+            raise e
 
     async def get_image_by_id(self, image_id: UUID) -> Image:
         query = select(Image).where(Image.id == image_id)

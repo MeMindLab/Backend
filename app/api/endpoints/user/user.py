@@ -133,5 +133,5 @@ async def delete_user_handler(
     await user_service.deactivate_user(
         user_id=current_user,
         password=request.password,
-        delete_reason=request.delete_reason,
+        delete_reasons=request.delete_reasons,
     )

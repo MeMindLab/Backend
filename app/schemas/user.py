@@ -59,7 +59,7 @@ class UserMeResponse(UserSignInResponse):
 
 class UserWithdrawal(BaseModel):
     password: str = Field(..., min_length=8)
-    delete_reason: str
+    delete_reasons: list[str]
 
 
 class UserSchema(UserMeResponse):

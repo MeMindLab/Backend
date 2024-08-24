@@ -48,21 +48,16 @@ class UserRepository:
         await self.session.refresh(instance=user)
         return user
 
-    async def deactivate_user(self, user: User, delete_reason: str):
+    async def deactivate_user(self, user: User, delete_reasons: list[str]):
         try:
-            user.delete_reason = delete_reason
+            user.delete_reasons = delete_reasons
             user.delete()
-
             user.is_active = False
 
-            # Add the updated user to the session
             self.session.add(user)
-
-            # Commit the transaction
             await self.session.commit()
-
-            # Refresh the user instance to reflect changes
             await self.session.refresh(user)
+
         except Exception as e:
             await self.session.rollback()  # Rollback in case of error
             print(f"Error during deactivation: {e}")

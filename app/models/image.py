@@ -19,10 +19,14 @@ class Image(Base, TimestampMixin):
     path = mapped_column(String(256), nullable=False)
     extension = mapped_column(String(8), nullable=False)
 
-    conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=True)
+    conversation_id = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), nullable=True
+    )
     conversation = relationship("Conversation", back_populates="images")
 
-    message_id = mapped_column(ForeignKey("messages.id"), nullable=True)
+    message_id = mapped_column(
+        ForeignKey("messages.id", ondelete="CASCADE"), nullable=True
+    )
     message = relationship("Message", back_populates="image")
 
     @classmethod

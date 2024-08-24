@@ -44,6 +44,20 @@ class LemonRepository:
         finally:
             await self.session.close()
 
-    def delete_lemon(self, lemon_id: int) -> None:
-        self.session.execute(delete(Lemon).where(Lemon.id == lemon_id))
-        self.session.commit()
+    async def delete_lemon(self, lemon_id: UUID) -> None:
+        await self.session.execute(delete(Lemon).where(Lemon.id == lemon_id))
+        await self.session.commit()
+
+    async def delete_lemon_by_user_id(self, user_id: UUID) -> None:
+        try:
+            # 먼저 사용자와 연관된 레몬을 찾습니다.
+            lemon = await self.get_lemon_by_user_id(user_id)
+            if lemon:
+                # 레몬이 존재하는 경우, 삭제합니다.
+                await self.delete_lemon(lemon.id)
+        except Exception as e:
+            print(f"delete lemon Error: {e}")
+            await self.session.rollback()
+            raise e
+        finally:
+            await self.session.close()

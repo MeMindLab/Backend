@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, date
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
+from sqlalchemy import select, or_, delete
 from sqlalchemy.orm import selectinload, joinedload
 
 
@@ -110,6 +110,11 @@ class ReportRepository:
         await self.session.commit()
         await self.session.refresh(report)
         return report
+
+    async def delete_report(self, report_id: UUID):
+        query = delete(Report).where(Report.id == report_id)
+        await self.session.execute(query)
+        await self.session.commit()
 
     async def get_search_reports(
         self,
