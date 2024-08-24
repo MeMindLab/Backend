@@ -6,14 +6,15 @@ from typing import Dict
 from sqlalchemy import (
     Integer,
     Uuid,
-    JSON,
+    BigInteger,
     String,
     ForeignKey,
     Text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from snowflake import SnowflakeGenerator
 from app.core.database import Base
 from app.models.common import TimestampMixin
 
@@ -164,6 +165,13 @@ class Report(Base, TimestampMixin):
     report_summary = relationship(
         "ReportSummary",
         back_populates="reports",
+    )
+
+    snowflake_id = mapped_column(
+        BigInteger,
+        index=True,
+        nullable=False,
+        default=lambda: next(SnowflakeGenerator(42)),
     )
 
     @property

@@ -64,7 +64,7 @@ class ListRequestBase(BaseModel):
 
 
 class ListResponseBase(BaseModel):
-    next_cursor: UUID | None = None
+    next_cursor: str | None = None
 
 
 class ReportListRequest(ListRequestBase):

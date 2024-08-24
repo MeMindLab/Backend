@@ -50,7 +50,7 @@ async def search_reports(
         limit=q.limit,
         cursor=q.cursor,
     )
-    next_cursor = reports[-1].id if len(reports) >= q.limit else None
+    next_cursor = str(reports[-1].snowflake_id) if len(reports) >= q.limit else None
 
     return ReportListResponse(
         reports=[
@@ -81,8 +81,11 @@ async def monthly_reports_handler(
     cursor: Optional[str] = Query(None, description="Cursor for pagination"),
     report_service: ReportService = Depends(),
 ):
-    reports = await report_service.get_monthly_reports(year=year, month=month)
-    next_cursor = reports[-1].id if len(reports) >= limit else None
+    reports = await report_service.get_monthly_reports(
+        year=year, month=month, cursor=cursor, limit=limit
+    )
+
+    next_cursor = str(reports[-1].snowflake_id) if len(reports) >= limit else None
 
     return ReportListResponse(
         reports=[
