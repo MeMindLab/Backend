@@ -6,7 +6,7 @@ from typing import List
 from fastapi import Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 
 from app.models.chat import Conversation, Message
@@ -60,12 +60,24 @@ class ConversationRepository:
 
     async def create_conversation(self, user_id: UUID, date_object: datetime.date):
         """새로운 대화를 생성하는 함수"""
+        print("!! create conversations 함수")
+        print(user_id)
 
         new_conversation = Conversation.create(user_id=user_id, date=date_object)
         self.session.add(new_conversation)
         await self.session.commit()
         await self.session.refresh(instance=new_conversation)
         return new_conversation
+
+    async def find_conversations_by_user_id(self, user_id: UUID):
+        query = select(Conversation).where(Conversation.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def delete_conversation(self, conversation_id: UUID):
+        query = delete(Conversation).where(Conversation.id == conversation_id)
+        await self.session.execute(query)
+        await self.session.commit()
 
 
 class MessageRepository:
@@ -85,6 +97,11 @@ class MessageRepository:
         )
         result = await self.session.execute(query)
         return result.scalars().all()
+
+    async def delete_message(self, message_id: UUID):
+        query = delete(Message).where(Message.id == message_id)
+        await self.session.execute(query)
+        await self.session.commit()
 
     async def create_message(
         self,

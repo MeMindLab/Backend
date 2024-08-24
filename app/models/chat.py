@@ -20,7 +20,9 @@ class Message(Base, TimestampMixin):
         DateTime, default=datetime.utcnow
     )
 
-    conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=False)
+    conversation_id = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
+    )
 
     conversation: Mapped["Conversation"] = relationship(
         "Conversation", back_populates="messages"

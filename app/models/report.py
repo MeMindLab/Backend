@@ -115,11 +115,15 @@ class Tags(Base, TimestampMixin):
     __tablename__ = "tags"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     tags = mapped_column(type_=JSONB, nullable=False)
+
     report_summary_id = mapped_column(
-        Uuid, ForeignKey("report_summary.id"), nullable=False
+        Uuid, ForeignKey("report_summary.id", ondelete="CASCADE"), nullable=False
     )
 
-    report_summary = relationship("ReportSummary", back_populates="tags")
+    report_summary = relationship(
+        "ReportSummary",
+        back_populates="tags",
+    )
 
     @classmethod
     def create(cls, tags: list[str], report_id: uuid.UUID):
@@ -133,12 +137,18 @@ class Report(Base, TimestampMixin):
     __tablename__ = "report"
     id = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     drawing_diary_id = mapped_column(
-        ForeignKey("drawing_diary.drawing_diary_id"),
+        ForeignKey("drawing_diary.drawing_diary_id", ondelete="CASCADE"),
         nullable=True,
     )
-    emotion_id = mapped_column(ForeignKey("emotion.id"), nullable=False)
-    report_summary_id = mapped_column(ForeignKey("report_summary.id"), nullable=False)
-    conversation_id = mapped_column(ForeignKey("conversations.id"), nullable=False)
+    emotion_id = mapped_column(
+        ForeignKey("emotion.id", ondelete="CASCADE"), nullable=False
+    )
+    report_summary_id = mapped_column(
+        ForeignKey("report_summary.id", ondelete="CASCADE"), nullable=False
+    )
+    conversation_id = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
+    )
 
     conversation = relationship("Conversation", back_populates="reports")
 

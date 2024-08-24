@@ -14,6 +14,7 @@ from sqlalchemy.orm import (
     ORMExecuteState,
     with_loader_criteria,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 from .common import CommonModel
@@ -51,7 +52,7 @@ class User(CommonModel, SoftDeleteMixin):
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.user)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     mobile: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    delete_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    delete_reasons: Mapped[list[str]] = mapped_column(JSONB, nullable=True)
 
     lemons: Mapped["Lemon"] = relationship(
         "Lemon", back_populates="user", uselist=False
