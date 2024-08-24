@@ -107,20 +107,19 @@ class ReportService:
             keyword=keywords,
         )
 
-    async def get_search_reports(
-        self, keywords, limit: int, cursor: UUID | None = None
-    ):
+    async def get_search_reports(self, keywords, limit: int, cursor: str | None = None):
         result = await self.report_repository.get_search_reports(
             keywords, limit=limit, cursor=cursor
         )
 
         return result
 
-    async def get_monthly_reports(self, year: int, month: int):
+    async def get_monthly_reports(
+        self, year: int, month: int, limit: int, cursor: UUID | None
+    ):
         # 해당 월의 대화 리스트 가져오기
         reports = await self.report_repository.get_monthly_reports(
-            month=month,
-            year=year,
+            month=month, year=year, cursor=cursor, limit=limit
         )
 
         return reports

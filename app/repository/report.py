@@ -120,7 +120,7 @@ class ReportRepository:
         self,
         keywords: str,
         limit: int,
-        cursor: UUID | None = None,
+        cursor: str | None = None,
     ):
         keyword_list = [keyword.strip() for keyword in keywords.split(" ")]
         keyword_filter = or_(
@@ -151,9 +151,10 @@ class ReportRepository:
         )
 
         if cursor is not None:
-            query = query.where(Report.id > cursor)
+            cursor_int = int(cursor)  # Convert cursor to integer
+            query = query.where(Report.snowflake_id < cursor_int)
 
-        # # 쿼리 정렬 및 결과 수 제한
+            # 쿼리 정렬 및 결과 수 제한
         query = query.order_by(Report.created_at.desc()).limit(limit)
 
         # # 쿼리 실행
@@ -162,7 +163,13 @@ class ReportRepository:
 
         return reports
 
-    async def get_monthly_reports(self, month: int, year: int):
+    async def get_monthly_reports(
+        self,
+        month: int,
+        year: int,
+        limit: int,
+        cursor: str | None = None,
+    ):
         # 월의 시작일과 마지막일 계산
         start_date = datetime(year, month, 1)
         end_date = start_date + timedelta(days=31)
@@ -183,6 +190,13 @@ class ReportRepository:
                 selectinload(Report.drawing_diary),  # DrawingDiary 로드
             )
         )
+
+        if cursor is not None:
+            cursor_int = int(cursor)  # Convert cursor to integer
+            query = query.where(Report.snowflake_id < cursor_int)
+
+        # 쿼리 정렬 및 결과 수 제한
+        query = query.order_by(Report.created_at.desc()).limit(limit)
 
         # 쿼리 실행
         results = await self.session.execute(query)
