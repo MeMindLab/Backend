@@ -73,7 +73,8 @@ class ReportListRequest(ListRequestBase):
 
 class ReportListResponse(ListResponseBase):
     class Report(BaseModel):
-        id: UUID
+        report_id: UUID
+        conversation_id: UUID
         tags: list[str]
         ai_summary: str
         thumbnail: Optional[str] = None
