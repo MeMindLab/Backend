@@ -55,7 +55,8 @@ async def search_reports(
     return ReportListResponse(
         reports=[
             ReportListResponse.Report(
-                id=report.id,
+                report_id=report.id,
+                conversation_id=report.conversation_id,
                 tags=[
                     tag
                     for tags_object in report.report_summary.tags
@@ -73,7 +74,7 @@ async def search_reports(
     )
 
 
-@report_module.get("/monthly-reports", response_model=ReportListResponse)
+@report_module.get("/monthly-reports")
 async def monthly_reports_handler(
     year: int = Query(..., description="Year of the reports"),
     month: int = Query(..., description="Month of the reports"),
@@ -90,7 +91,8 @@ async def monthly_reports_handler(
     return ReportListResponse(
         reports=[
             ReportListResponse.Report(
-                id=report.id,
+                report_id=report.id,
+                conversation_id=report.conversation_id,
                 tags=[
                     tag
                     for tags_object in report.report_summary.tags
