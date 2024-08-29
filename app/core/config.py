@@ -15,13 +15,19 @@ class ConfigTemplate(BaseSettings):
     DATABASE_PORT: int = 5432
     DATABASE_NAME: str = "dev"
 
-    SUPABASE_URL: str
-    SUPABASE_KEY: str
-    SUPABASE_BUCKET: str = "memind-image"
+    SUPABASE_DATABASE_USER: str = os.environ.get("SUPABASE_DATABASE_USER")
+    SUPABASE_DATABASE_PASSWORD: str = os.environ.get("SUPABASE_DATABASE_PASSWORD")
+    SUPABASE_DATABASE_HOST: str = os.environ.get("SUPABASE_DATABASE_HOST")
+    SUPABASE_DATABASE_PORT: int = int(os.environ.get("SUPABASE_DATABASE_PORT", 5432))
+    SUPABASE_DATABASE_NAME: str = os.environ.get("SUPABASE_DATABASE_NAME")
 
-    SECRET_KEY: str = "09027e5d4c40783326cef1ee95c179c7dcaa4c92e90844c1c1958b027546d240"
+    SUPABASE_URL: str = os.environ.get("SUPABASE_URL")
+    SUPABASE_KEY: str = os.environ.get("SUPABASE_KEY")
+    SUPABASE_BUCKET: str = os.environ.get("SUPABASE_BUCKET", "memind-image")
+
+    SECRET_KEY: str = os.environ.get("SECRET_KEY")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # 5분
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # 15분
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
     TWILIO_VERIFY_SERVICE_SID: str
@@ -36,8 +42,8 @@ class ConfigTemplate(BaseSettings):
     @property
     def db_uri(self) -> str:
         return (
-            f"postgresql+asyncpg://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@"
-            f"{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
+            f"postgresql+asyncpg://{self.SUPABASE_DATABASE_USER}:{self.SUPABASE_DATABASE_PASSWORD}@"
+            f"{self.SUPABASE_DATABASE_HOST}:{self.SUPABASE_DATABASE_PORT}/{self.SUPABASE_DATABASE_NAME}"
         )
 
 
