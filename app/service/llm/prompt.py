@@ -23,6 +23,13 @@ class PromptGenerator:
         return loaded_prompt
 
     @staticmethod
+    def generate_image_prompt(keywords: str):
+        loaded_prompt = load_prompt("./app/prompt/image.yaml")
+        prompt_with_keywords = loaded_prompt.template.format(keywords=keywords)
+
+        return prompt_with_keywords
+
+    @staticmethod
     def generate_chat_prompt() -> ChatPromptTemplate:
         # 사용자와 AI의 대화 예제를 기본 프롬프트로 생성합니다.
         example_prompt = ChatPromptTemplate.from_messages(

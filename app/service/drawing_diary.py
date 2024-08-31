@@ -4,7 +4,7 @@ from uuid import UUID
 from app.repository.image import ImageRepository
 from app.repository.drawing_image import DrawingImageRepository
 
-
+from app.service.llm import OpenAIClient, PromptGenerator
 from app.models.report import DrawingDiary
 from app.repository.report import ReportRepository
 from app.utils.image import ImageUtil
@@ -15,6 +15,7 @@ class DrawingDiaryService:
         self,
         image_repository: ImageRepository = Depends(ImageRepository),
         image_utils: ImageUtil = Depends(ImageUtil),
+        openai_client: OpenAIClient = Depends(OpenAIClient),
         drawing_diary_repository=Depends(DrawingImageRepository),
         report_repository=Depends(ReportRepository),
     ):
@@ -22,6 +23,8 @@ class DrawingDiaryService:
         self.image_utils = image_utils
         self.drawing_diary_repository = drawing_diary_repository
         self.report_repository = report_repository
+        self.openai_client = openai_client
+        self.prompt_generator = PromptGenerator()
 
     async def create_drawing_diary(
         self,
@@ -48,3 +51,20 @@ class DrawingDiaryService:
 
         existing_report.drawing_diary_id = drawing_diary.drawing_diary_id
         await self.report_repository.update_report(existing_report)
+
+    async def generate_image(self, keywords: list[str]) -> str:
+        client = self.openai_client.create_openai_instance()
+        keyword_string = ", ".join(keywords)
+        prompt = self.prompt_generator.generate_image_prompt(keyword_string)
+
+        response = await client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+
+        image_url = response.data[0].url
+
+        return image_url

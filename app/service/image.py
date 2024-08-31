@@ -5,7 +5,6 @@ from uuid import UUID
 
 from app.repository.image import ImageRepository
 from app.repository.chat import MessageRepository
-from app.service.llm import OpenAIClient
 from app.models.image import Image
 
 
@@ -13,11 +12,9 @@ class ImageService:
     def __init__(
         self,
         image_repository: ImageRepository = Depends(ImageRepository),
-        openai_client: OpenAIClient = Depends(OpenAIClient),
         message_repository: MessageRepository = Depends(),
     ):
         self.image_repository = image_repository
-        self.openai_client = openai_client
         self.message_repository = message_repository
 
     async def handle_image_message(self, url: str, conversation_id: UUID, index: int):
@@ -66,29 +63,3 @@ class ImageService:
         _, extension = os.path.splitext(filename)
 
         return extension.lstrip(".")
-
-    async def generate_image(self, keywords: list[str]) -> str:
-        client = self.openai_client.create_openai_instance()
-        keyword_string = ", ".join(keywords)
-
-        prompt = f"""
-        Create a whimsical image based on these keywords
-        Keywords:{keyword_string}
-    
-        A delightful image filled with elements related to the keywords. 
-        - It should have a landscape painting feel and be colorful and related to your keywords, and it would be nice to have some natural or topographical elements added.
-        
-        Make sure each keyword is clearly represented. 
-        """
-
-        response = await client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size="1024x1024",
-            quality="standard",
-            n=1,
-        )
-
-        image_url = response.data[0].url
-
-        return image_url
