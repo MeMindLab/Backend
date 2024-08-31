@@ -45,13 +45,12 @@ COPY --from=builder-base $POETRY_HOME $POETRY_HOME
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
 # Copying in our entrypoint
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
+COPY pyproject.toml poetry.lock ./
 
 WORKDIR /app
 COPY . .
 
 EXPOSE 8000
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["poetry","gunicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=8000"]
+
+# 실행 명령
+CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
