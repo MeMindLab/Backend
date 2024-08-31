@@ -1,0 +1,26 @@
+# fly.toml app configuration file generated for backend-wandering-glitter-8053 on 2024-08-31T16:17:41+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'backend-wandering-glitter-8053'
+primary_region = 'nrt'
+
+[build]
+dockerfile = "docker/Dockerfile"
+
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+
