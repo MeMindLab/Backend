@@ -4,13 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 
 from app.auth.authenticate import authenticate_bearer
-from app.service.auth import AuthService
+from app.service import AuthService, TwilioService
 from app.schemas.user import (
     UserLogin,
     Token,
     VerificationCheckResponse,
 )
-from app.service.twilio import TwilioService
 
 
 auth_module = APIRouter()

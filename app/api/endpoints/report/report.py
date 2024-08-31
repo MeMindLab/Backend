@@ -4,7 +4,8 @@ from fastapi import APIRouter, Path, Query, Depends
 from app.auth.authenticate import get_current_user
 from typing import Optional
 
-from app.service.report.report import ReportService
+
+from app.service import ReportService
 from app.schemas.report import (
     ReportListRequest,
     ReportListResponse,

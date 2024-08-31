@@ -1,12 +1,9 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+
 from fastapi import APIRouter, Path, Depends
 
-
-from app.service.lemon import LemonService
+from app.service import LemonService
 from app.schemas.lemon import LemonResponse, LemonUpdate
-
-from app.auth.authenticate import get_current_user
 
 
 lemon_user_module = APIRouter()

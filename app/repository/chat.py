@@ -60,9 +60,6 @@ class ConversationRepository:
 
     async def create_conversation(self, user_id: UUID, date_object: datetime.date):
         """새로운 대화를 생성하는 함수"""
-        print("!! create conversations 함수")
-        print(user_id)
-
         new_conversation = Conversation.create(user_id=user_id, date=date_object)
         self.session.add(new_conversation)
         await self.session.commit()

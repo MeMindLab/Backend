@@ -7,7 +7,8 @@ from app.schemas.chat import (
     MonthlyConversationsResponse,
     ConversationBase,
 )
-from app.service.chat import MessageService, ConversationService
+
+from app.service import MessageService, ConversationService
 from app.auth.authenticate import get_current_user
 
 

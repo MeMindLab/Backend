@@ -12,8 +12,7 @@ from app.schemas.user import (
     UserMeResponse,
     UserWithdrawal,
 )
-from app.service.user import UserService
-from app.service.lemon import LemonService
+from app.service import UserService, LemonService
 from app.schemas.lemon import LemonCreate
 from app.auth.authenticate import get_current_user
 
@@ -91,7 +90,6 @@ async def user_me_handler(
     current_user: UUID = Depends(get_current_user),
     user_service: UserService = Depends(),
 ) -> UserMeResponse:
-    print(current_user)
     user = await user_service.get_user_by_id(user_id=current_user)
 
     return UserMeResponse.from_orm(user)
