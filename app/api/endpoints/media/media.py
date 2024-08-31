@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, UploadFile, Depends, File
 from app.service.supbase import SupabaseService
+from app.service.image import ImageService
 from app.service.drawing_diary import DrawingDiaryService
 from app.auth.authenticate import get_current_user
 
@@ -48,10 +49,10 @@ class GenerateImageRequest(BaseModel):
 
 @media_module.post("/generate-image", status_code=200)
 async def generate_image(
-    drawing_diary_service: DrawingDiaryService = Depends(DrawingDiaryService),
+    image_service: ImageService = Depends(ImageService),
     q: GenerateImageRequest = Depends(),
 ):
-    result = await drawing_diary_service.generate_image(keywords=q.keywords)
+    result = await image_service.generate_image(keywords=q.keywords)
     return result
 
 
