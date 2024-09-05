@@ -32,6 +32,13 @@ class UserRepository:
         user = result.scalars().first()
         return user
 
+    async def find_user_by_referral_code(self, referral_code: str) -> User | None:
+        """추천인 코드를 통해 유저를 조회합니다."""
+        query = select(User).where(User.referral_code == referral_code)
+        result = await self.session.execute(query)
+        user = result.scalars().first()
+        return user
+
     async def find_user_by_nickname(self, nickname: str) -> User:
         query = select(User).where(User.nickname == nickname)
         user = await self.session.execute(query)

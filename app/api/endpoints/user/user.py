@@ -2,6 +2,7 @@ from uuid import UUID
 
 # fastapi
 from fastapi import APIRouter, Depends, HTTPException, Body
+from starlette import status
 
 # import
 from app.schemas.user import (
@@ -12,42 +13,22 @@ from app.schemas.user import (
     UserMeResponse,
     UserWithdrawal,
 )
-from app.service import UserService, LemonService
-from app.schemas.lemon import LemonCreate
+from app.service import UserService
 from app.auth.authenticate import get_current_user
 
 user_module = APIRouter()
 
 
 # create new user
-@user_module.post("/signup", response_model=UserSignInResponse)
+@user_module.post(
+    "/signup", response_model=UserSignInResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_new_user(
     request: UserCreate,
-    lemon_service: LemonService = Depends(),
     user_service: UserService = Depends(),
 ):
     try:
-        # 닉네임 길이 검증
-        user_service.validate_nickname_length(request.nickname)
-
-        # 데이터베이스에서 이메일과 닉네임 중복 검사
-        db_user_by_email = await user_service.find_user_by_email(request.email)
-        db_user_by_nickname = await user_service.get_user_by_nickname(request.nickname)
-
-        if db_user_by_email and db_user_by_nickname:
-            raise HTTPException(status_code=400, detail="Invalid nickname and email")
-        elif db_user_by_email:
-            raise HTTPException(status_code=400, detail="Invalid Email")
-        elif db_user_by_nickname:
-            raise HTTPException(status_code=400, detail="Invalid nickname")
-
-        new_user = await user_service.create_new_user(user=request)
-
-        # 레몬 초기화
-        lemon_create = LemonCreate(lemon_count=0)
-        await lemon_service.create_lemon_for_user(
-            lemon_create=lemon_create, user_id=new_user.id
-        )
+        new_user = await user_service.signup_user(user=request)
 
         return new_user
 

@@ -6,4 +6,4 @@ from .drawing_diary import DrawingDiaryService
 from .supbase import SupabaseService
 from .twilio import TwilioService
 from .report.report import ReportService
-from .user import UserService
+from .user import UserService, ReferralService

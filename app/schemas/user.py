@@ -13,6 +13,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
     nickname: str | None = None
+    referral_code: Optional[str] = None
 
 
 class UserLogin(UserBase):

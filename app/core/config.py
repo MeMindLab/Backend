@@ -9,6 +9,9 @@ class ConfigTemplate(BaseSettings):
         env_file_encoding="utf-8",
     )
 
+    INITIAL_LEMON_COUNT: int = int(os.environ.get("INITIAL_LEMON_COUNT", 1))
+    REFERRAL_LEMON_BONUS: int = int(os.environ.get("REFERRAL_LEMON_BONUS", 5))
+
     DATABASE_USER: str = "dev"
     DATABASE_PASSWORD: str = "dev1234"
     DATABASE_HOST: str = "memind-postgres"
