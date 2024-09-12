@@ -171,14 +171,29 @@ class UserService:
         user_data: UserUpdate,
     ) -> User:
         user = await self.get_user_by_id(user_id=user_id)
-        user.email = user_data.email
-        user.nickname = user_data.nickname
 
-        # Check if is_verified is provided
+        # 이메일 중복 검사 및 업데이트
+        if user_data.email and user_data.email != user.email:
+            email_in_use = await self.find_user_by_email(user_data.email)
+            if email_in_use:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="이미 사용중 인 이메일 입니다.",
+                )
+            user.email = user_data.email
+
+        if user_data.nickname != user.nickname:
+            nickname_in_use = await self.get_user_by_nickname(user_data.nickname)
+            if nickname_in_use:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="이미 사용중 인 닉네임 입니다.",
+                )
+            user.nickname = user_data.nickname
+
         if user_data.is_verified is not None:
             user.is_verified = user_data.is_verified
 
-        # Check if mobile is provided
         if user_data.mobile is not None:
             user.mobile = user_data.mobile
 
