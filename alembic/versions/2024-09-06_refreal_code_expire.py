@@ -31,10 +31,24 @@ def upgrade() -> None:
         ),
     )
 
+    op.add_column(
+        "users", sa.Column("referral_code_creation_date", sa.DateTime(), nullable=True)
+    )
+    op.add_column(
+        "users",
+        sa.Column(
+            "referral_code_validity_period",
+            sa.Integer(),
+            nullable=False,
+            server_default="30",
+        ),
+    )
+
     # 기존 레코드에 기본값 설정
     op.execute(
         "UPDATE users SET referral_code_validity_period = 30 WHERE referral_code_validity_period IS NULL"
     )
+
     # ### end Alembic commands ###
 
 

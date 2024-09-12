@@ -6,7 +6,13 @@ from app.core.config import ConfigTemplate
 
 class SqlaEngine:
     def __init__(self, config: ConfigTemplate):
-        self._engine = create_async_engine(config.db_uri, echo=True)
+        self._engine = create_async_engine(
+            config.db_uri,
+            echo=True,
+            pool_size=20,
+            max_overflow=15,
+            pool_timeout=30,
+        )
 
     @property
     def engine(self):
