@@ -1,7 +1,7 @@
 from uuid import UUID
 
 # fastapi
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 # import
@@ -12,6 +12,7 @@ from app.schemas.user import (
     UserSignInResponse,
     UserMeResponse,
     UserWithdrawal,
+    UserValidation,
 )
 from app.service import UserService
 from app.auth.authenticate import get_current_user
@@ -114,3 +115,21 @@ async def delete_user_handler(
         password=request.password,
         delete_reasons=request.delete_reasons,
     )
+
+
+@user_module.get("/emails/validation", response_model=UserValidation)
+async def check_email_availability(
+    email: str,
+    user_service: UserService = Depends(),
+):
+    is_available = await user_service.check_email_availability(email=email)
+    return UserValidation(result=is_available)
+
+
+@user_module.get("/nickname/validation", response_model=UserValidation)
+async def check_nickname_availability(
+    nickname: str,
+    user_service: UserService = Depends(),
+):
+    is_available = await user_service.check_nickname_availability(nickname)
+    return UserValidation(result=is_available)

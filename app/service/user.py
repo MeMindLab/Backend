@@ -3,7 +3,7 @@ import string
 
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
+
 from fastapi import Depends, HTTPException, status
 from uuid import UUID
 
@@ -20,7 +20,7 @@ from app.core.config import get_config, ConfigTemplate
 from app.auth import hashpassword
 from app.schemas.user import UserUpdate, UserCreate
 from app.schemas.lemon import LemonCreate
-from app.service import LemonService
+
 
 hash_password = hashpassword.HashPassword()
 
@@ -183,6 +183,7 @@ class UserService:
             user.email = user_data.email
 
         if user_data.nickname != user.nickname:
+            self.validate_nickname_length(user_data.nickname)
             nickname_in_use = await self.get_user_by_nickname(user_data.nickname)
             if nickname_in_use:
                 raise HTTPException(
@@ -200,6 +201,20 @@ class UserService:
         updated_user = await self.user_repository.save_user(user=user)
 
         return updated_user
+
+    async def check_email_availability(self, email: str) -> bool:
+        existing_user = await self.user_repository.find_user_by_email(email)
+
+        if existing_user:
+            raise HTTPException(status_code=409, detail="이미 사용 중인 이메일입니다.")
+        return not existing_user
+
+    async def check_nickname_availability(self, nickname: str) -> bool:
+        existing_user = await self.user_repository.find_user_by_nickname(nickname)
+
+        if existing_user:
+            raise HTTPException(status_code=409, detail="이미 사용 중인 닉네임입니다.")
+        return not existing_user
 
     async def deactivate_user(
         self, user_id: UUID, password: str, delete_reasons: list[str]

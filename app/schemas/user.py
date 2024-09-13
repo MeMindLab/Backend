@@ -63,6 +63,10 @@ class UserWithdrawal(BaseModel):
     delete_reasons: list[str]
 
 
+class UserValidation(BaseModel):
+    result: bool
+
+
 class UserSchema(UserMeResponse):
     lemons: Optional[int]
 
