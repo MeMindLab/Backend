@@ -41,6 +41,15 @@ async def get_reports(
     return result
 
 
+@report_module.get("/{report_id}")
+async def get_reports_handler(
+    report_id: UUID = Path(..., title="Report ID", description="The ID of the Report"),
+    report_service: ReportService = Depends(),
+):
+    result = await report_service.get_daily_report_by_id(report_id)
+    return result
+
+
 @report_module.post("/search", response_model=ReportListResponse)
 async def search_reports(
     q: ReportListRequest = Depends(),

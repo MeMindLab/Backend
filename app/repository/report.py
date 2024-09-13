@@ -83,6 +83,20 @@ class ReportRepository:
         await self.session.refresh(report)
         return report
 
+    async def get_report_by_id(self, report_id: UUID) -> Report:
+        query = (
+            select(Report)
+            .options(
+                selectinload(Report.emotions),
+                selectinload(Report.report_summary).selectinload(ReportSummary.tags),
+                selectinload(Report.drawing_diary),
+            )
+            .where(Report.id == report_id)
+        )
+
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
     async def get_report_by_conversation_id(self, conversation_id: UUID) -> Report:
         query = (
             select(Report)

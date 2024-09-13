@@ -79,6 +79,51 @@ class ReportService:
 
         return response
 
+    async def get_daily_report_by_id(self, report_id: UUID):
+        report = await self.report_repository.get_report_by_id(report_id)
+        chat_history = await self.message_getter.get_chat_history(
+            report.conversation_id
+        )
+        report_summary = ReportSummaryBase(
+            summary=report.report_summary.contents,
+            tags=[tag for tag in report.report_summary.tags[0].tags]
+            if report.report_summary.tags
+            else [],
+        )
+
+        emotion = report.emotions
+        percentages = emotion.calculate_percentages()
+
+        emotions_base = EmotionBase(
+            comfortable_percentage=percentages["comfortable_percentage"],
+            happy_percentage=percentages["happy_percentage"],
+            sad_percentage=percentages["sad_percentage"],
+            joyful_percentage=percentages["joyful_percentage"],
+            annoyed_percentage=percentages["annoyed_percentage"],
+            lethargic_percentage=percentages["lethargic_percentage"],
+            total_score=emotion.total_score,
+        )
+
+        images = await self.report_repository.get_images_by_conversation_id(
+            report.conversation_id
+        )
+
+        image_urls = [
+            await self.image_util.get_image_url_by_path(image.path) for image in images
+        ]
+
+        response = ReportBase(
+            report_id=report.id,
+            report_summary=report_summary,
+            emotions=emotions_base,
+            conversation_id=report.conversation_id,
+            drawing_diary=report.drawing_diary,
+            chat_history=chat_history,
+            images=image_urls,
+        )
+
+        return response
+
     async def create_report(self, conversation_id: UUID) -> ReportCreateResponse:
         keywords_result = await self.keyword_extractor.get_keywords(conversation_id)
         keywords = keywords_result["keywords"]
