@@ -46,10 +46,10 @@ class GenerateImageRequest(BaseModel):
 
 @media_module.post("/generate-image", status_code=200)
 async def generate_image(
-    image_service: ImageService = Depends(ImageService),
+    drawing_diary_service: DrawingDiaryService = Depends(DrawingDiaryService),
     q: GenerateImageRequest = Depends(),
 ):
-    result = await image_service.generate_image(keywords=q.keywords)
+    result = await drawing_diary_service.generate_image(keywords=q.keywords)
     return result
 
 
