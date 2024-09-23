@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, UploadFile, Depends, File
+from openai.types.beta.threads import image_url
 from pydantic import BaseModel
 
 from app.service import ImageService, SupabaseService, DrawingDiaryService
@@ -44,13 +45,19 @@ class GenerateImageRequest(BaseModel):
     keywords: list[str]
 
 
-@media_module.post("/generate-image", status_code=200)
+class GenerateImageResponse(BaseModel):
+    image_url: str
+
+
+@media_module.post(
+    "/generate-image", status_code=200, response_model=GenerateImageResponse
+)
 async def generate_image(
     drawing_diary_service: DrawingDiaryService = Depends(DrawingDiaryService),
     q: GenerateImageRequest = Depends(),
 ):
     result = await drawing_diary_service.generate_image(keywords=q.keywords)
-    return result
+    return GenerateImageResponse(image_url=result)
 
 
 class UpdateImageRequest(BaseModel):

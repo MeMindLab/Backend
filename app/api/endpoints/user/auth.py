@@ -26,7 +26,7 @@ async def user_login(user: UserLogin, auth_service: AuthService = Depends()):
 async def refresh_access_token(
     refresh_request: str = Depends(authenticate_bearer),
     auth_service: AuthService = Depends(),
-) -> Token:
+):
     return await auth_service.refresh_token_handler(refresh_request)
 
 

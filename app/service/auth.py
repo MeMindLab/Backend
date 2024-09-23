@@ -86,6 +86,30 @@ class AuthService:
                     detail="Invalid refresh token",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
+
+            # 데이터베이스에서 유저 정보 조회
+            user = await self.user_repository.find_user_by_id(user_id=user_id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            # 리프레시 토큰 만료 여부 확인
+            refresh_token_expires_in = payload.get("exp")
+
+            if (
+                refresh_token_expires_in is None
+                or refresh_token_expires_in
+                < timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()
+            ):
+                # 새로운 리프레시 토큰 발급
+                refresh_token_expires = timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
+                refresh_token = create_refresh_token(
+                    data={"id": str(user.id), "email": user.email},
+                    expires_delta=refresh_token_expires,
+                )
+            else:
+                # 리프레시 토큰이 아직 유효하면 기존 리프레시 토큰 사용
+                refresh_token = refresh_request
+
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -93,15 +117,10 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        # 데이터베이스에서 유저 정보 조회
-        user = await self.user_repository.find_user_by_id(user_id=user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
         # 새로운 엑세스 토큰 생성
         access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"id": user.id, "email": user.email, "role": user.role},
+            data={"id": str(user.id), "email": user.email, "role": user.role},
             expires_delta=access_token_expires,
         )
 
@@ -111,7 +130,7 @@ class AuthService:
         # 새로운 토큰 정보와 함께 응답 반환
         return Token(
             access_token=access_token,
-            refresh_token=refresh_request,  # 기존 리프레시 토큰 재사용
+            refresh_token=refresh_token,
             token_type="bearer",
             expires_in=expires_in,
         )
