@@ -28,13 +28,9 @@ async def create_new_user(
     request: UserCreate,
     user_service: UserService = Depends(),
 ):
-    try:
-        new_user = await user_service.signup_user(user=request)
+    new_user = await user_service.signup_user(user=request)
 
-        return new_user
-
-    except HTTPException:
-        raise
+    return new_user
 
 
 # get all user

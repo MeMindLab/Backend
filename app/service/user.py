@@ -152,10 +152,12 @@ class UserService:
         )
 
         # 추천인 코드가 있을 경우 처리
-
-        referrer = await self.referral_service.find_user_by_referral_code(
-            user.referral_code,
-        )
+        if user.referral_code is not None:
+            referrer = await self.referral_service.find_user_by_referral_code(
+                user.referral_code
+            )
+        else:
+            referrer = None
 
         # 사용자 저장
         saved_user = await self.user_repository.save_user(user=new_user)

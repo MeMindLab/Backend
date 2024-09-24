@@ -26,7 +26,6 @@ class LemonRepository:
             return lemon
         except Exception as e:
             print(f"save lemon Error:{e}")
-            await self.session.rollback()  # 롤백
             raise e
         finally:
             await self.session.close()  # 세션 닫
