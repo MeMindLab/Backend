@@ -67,11 +67,8 @@ class ReferralService:
         # 3. 해시 함수를 사용하여 바이트 배열을 해시
         hashed_bytes = hashlib.sha256(uuid_bytes).digest()
 
-        # 4. 해시된 바이트의 앞 4글자를 2자리의 16진수 문자열로 저장
-        hex_code = "".join(f"{byte:02x}" for byte in hashed_bytes[:4])
-
-        # 5. 8자리 고유값 생성 (앞 4글자를 두 번 반복)
-        referral_code = (hex_code * 2)[:8]
+        # 4. 해시된 바이트를 16진수 문자열로 저장
+        referral_code = "".join(f"{byte:02x}" for byte in hashed_bytes[4:8])
         return referral_code
 
 
@@ -116,14 +113,13 @@ class UserService:
         user = await self.user_repository.find_user_by_email(email=email)
         return user
 
-    async def create_new_user(self, user: UserCreate) -> User:
+    async def create_new_user(self, user: UserCreate, referral_code: str) -> User:
         new_user = User(
             email=user.email,
             password=hash_password.create_hash(user.password),
             nickname=user.nickname,
+            referral_code=referral_code,
         )
-        # 추천인 코드 생성
-        _ = new_user.referral_code
 
         return await self.user_repository.save_user(user=new_user)
 
@@ -142,8 +138,9 @@ class UserService:
         elif db_user_by_nickname:
             raise HTTPException(status_code=400, detail="Invalid nickname")
 
+        referral_code = self.referral_service.generate_referral_code()
         # 새 사용자 객체 생성
-        new_user = await self.create_new_user(user)
+        new_user = await self.create_new_user(user, referral_code)
 
         # 추천인 코드가 있을 경우 처리
         referrer = None

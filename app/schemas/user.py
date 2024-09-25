@@ -53,6 +53,7 @@ class UserUpdate(UserBase):
 
 class UserMeResponse(UserSignInResponse):
     mobile: Optional[str] = None
+    referral_code: str
 
     class Config:
         from_attributes = True
