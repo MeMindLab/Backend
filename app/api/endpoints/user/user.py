@@ -56,6 +56,7 @@ async def get_users(
             created_at=user.created_at,
             updated_at=user.updated_at,
             mobile=user.mobile,
+            referral_code=user.referral_code,
             lemons=user.lemons.lemon_count if user.lemons else None,
         )
         for user in users
