@@ -12,6 +12,10 @@ class ConfigTemplate(BaseSettings):
     INITIAL_LEMON_COUNT: int = int(os.environ.get("INITIAL_LEMON_COUNT", 1))
     REFERRAL_LEMON_BONUS: int = int(os.environ.get("REFERRAL_LEMON_BONUS", 5))
 
+    LEMON_COUNT_FOR_VERIFIED_USER: int = int(
+        os.environ.get("LEMON_COUNT_FOR_VERIFIED_USER", 5)
+    )
+
     DATABASE_USER: str = "dev"
     DATABASE_PASSWORD: str = "dev1234"
     DATABASE_HOST: str = "memind-postgres"

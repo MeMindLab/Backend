@@ -1,21 +1,31 @@
 import phonenumbers
+
+from uuid import UUID
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from twilio.http.async_http_client import AsyncTwilioHttpClient
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 
-from app.core.config import config
+from app.core.config import get_config, ConfigTemplate
 from app.schemas.user import VerificationResult
+from app.schemas.lemon import LemonUpdate
+from app.service import LemonService
 
 
 class TwilioService:
-    def __init__(self):
+    def __init__(
+        self,
+        lemon_service: LemonService = Depends(LemonService),
+        config: ConfigTemplate = Depends(get_config),
+    ):
         self.account_sid = config.TWILIO_ACCOUNT_SID
         self.auth_token = config.TWILIO_AUTH_TOKEN
         self.verify_service_sid = config.TWILIO_VERIFY_SERVICE_SID
         self.http_client = None
         self.client = None
+        self.lemon_service = lemon_service
+        self.config = config
 
     async def initialize_client(self):
         if not self.http_client:
@@ -55,7 +65,12 @@ class TwilioService:
                 detail=f"Failed to send verification: {e.msg}",
             )
 
-    async def verify_code(self, phone_number: str, code: str) -> VerificationResult:
+    async def verify_code(
+        self,
+        phone_number: str,
+        code: str,
+        user_id: UUID,
+    ) -> VerificationResult:
         await self.initialize_client()
         try:
             verify_client = self.client.verify.v2.services(self.verify_service_sid)
@@ -64,12 +79,23 @@ class TwilioService:
             verification_check = await verify_client.verification_checks.create_async(
                 to=formatted_number, code=code
             )
-            result = {
-                "to": verification_check.to,
-                "channel": verification_check.channel,
-                "status": verification_check.status,
-                "valid": verification_check.valid,
-            }
+
+            result = VerificationResult(
+                to=verification_check.to,
+                channel=verification_check.channel,
+                status=verification_check.status,
+                valid=verification_check.valid,
+            )
+
+            if verification_check.valid:
+                # 여기서 레몬 갯수 업데이트
+                await self.lemon_service.update_lemon_by_user_id(
+                    lemon_data=LemonUpdate(
+                        lemon_count=self.config.LEMON_COUNT_FOR_VERIFIED_USER
+                    ),
+                    user_id=user_id,
+                )
+
         except TwilioRestException as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

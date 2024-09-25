@@ -1,3 +1,5 @@
+from uuid import UUID
+
 # fastapi
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,6 +12,7 @@ from app.schemas.user import (
     Token,
     VerificationCheckResponse,
 )
+from app.auth.authenticate import get_current_user
 
 
 auth_module = APIRouter()
@@ -52,10 +55,13 @@ async def create_verification_code(
     response_model=VerificationCheckResponse,
 )
 async def verify_code(
-    phone_number: str, code: str, twilio_service: TwilioService = Depends()
+    phone_number: str,
+    code: str,
+    twilio_service: TwilioService = Depends(),
+    auth: UUID = Depends(get_current_user),
 ):
     try:
-        result = await twilio_service.verify_code(phone_number, code)
+        result = await twilio_service.verify_code(phone_number, code, auth)
 
         return JSONResponse(
             status_code=200,
