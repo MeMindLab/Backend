@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 from typing import TYPE_CHECKING, Optional
 
@@ -12,7 +12,6 @@ from sqlalchemy import (
     Uuid,
     DateTime,
     event,
-    Integer,
     ForeignKey,
 )
 from sqlalchemy.orm import (
@@ -74,19 +73,22 @@ class User(CommonModel, SoftDeleteMixin):
         String(10), unique=True, index=True, nullable=True
     )  # 추천인 코드 필드 추가
 
-    referral_code_creation_date: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, nullable=True
-    )
-
-    referral_code_validity_period: Mapped[int] = mapped_column(
-        Integer,
-        default=30,
-        nullable=False,  # 기본 유효 기간: 30일
-    )  # 유효 기간(일 단위
-
     lemons: Mapped["Lemon"] = relationship(
         "Lemon", back_populates="user", uselist=False
     )
+
+    @property
+    def get_referral_code(self) -> str:
+        if not self.referral_code:
+            self.referral_code = self.generate_referral_code()
+        return self.referral_code
+
+    @staticmethod
+    def generate_referral_code() -> str:
+        from app.service.user import ReferralService
+
+        referral_service = ReferralService()
+        return referral_service.generate_referral_code()
 
     def __repr__(self):
         referrer_email = self.referrer.email if self.referrer else None

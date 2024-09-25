@@ -32,6 +32,7 @@ from app.models.lemon import Lemon
 from app.models.common import CommonModel
 from app.models.image import Image
 from app.models.chat import Conversation, Message
+from app.models.report import Report, Emotion, ReportSummary, Tags, Report
 
 
 # target_metadata = mymodel.Base.metadata

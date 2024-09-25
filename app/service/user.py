@@ -1,11 +1,10 @@
-import random
-import string
+import hashlib
 
 from datetime import datetime
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from app.models.user import User
 from app.models.lemon import Lemon
@@ -32,7 +31,6 @@ class ReferralService:
         lemon_repository: LemonRepository = Depends(LemonRepository),
         config: ConfigTemplate = Depends(get_config),
     ):
-        self.referral_code = self.generate_referral_code()
         self.user_repository = user_repository
         self.lemon_repository = lemon_repository
         self.config = config
@@ -57,26 +55,24 @@ class ReferralService:
         )
 
     @staticmethod
-    def set_referral_code(self, user: User, code: str):
-        """추천인 코드를 설정하고 생성 날짜를 업데이트합니다."""
-        user.referral_code = code
-        user.referral_code_creation_date = datetime.now()  # 현재 시간으로 설정
+    def generate_referral_code() -> str:
+        """추천인 코드를 생성합니다."""
 
-    @staticmethod
-    def generate_referral_code(length: int = 8) -> str:
-        """랜덤한 추천인 코드를 생성합니다."""
-        return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
+        # 1. UUID 문자열 생성
+        uuid_str = str(uuid4())
 
-    @staticmethod
-    def is_referral_code_valid(referral_code_expiry: Optional[datetime]) -> bool:
-        """추천인 코드 유효성을 확인합니다."""
-        if referral_code_expiry is None:
-            return False  # 유효 기간이 설정되지 않은 경우 유효하지 않음
-        return referral_code_expiry > datetime.now()  # 현재 시간이 유효 기간보다 작으면 True
+        # 2. UUID 문자열을 UTF-8로 인코딩하여 바이트 배열로 변환
+        uuid_bytes = uuid_str.encode("utf-8")
 
-    def get_referral_code(self) -> str:
-        """유저의 추천인 코드를 반환합니다."""
-        return self.referral_code
+        # 3. 해시 함수를 사용하여 바이트 배열을 해시
+        hashed_bytes = hashlib.sha256(uuid_bytes).digest()
+
+        # 4. 해시된 바이트의 앞 4글자를 2자리의 16진수 문자열로 저장
+        hex_code = "".join(f"{byte:02x}" for byte in hashed_bytes[:4])
+
+        # 5. 8자리 고유값 생성 (앞 4글자를 두 번 반복)
+        referral_code = (hex_code * 2)[:8]
+        return referral_code
 
 
 class UserService:
@@ -126,6 +122,8 @@ class UserService:
             password=hash_password.create_hash(user.password),
             nickname=user.nickname,
         )
+        # 추천인 코드 생성
+        _ = new_user.referral_code
 
         return await self.user_repository.save_user(user=new_user)
 
@@ -145,27 +143,23 @@ class UserService:
             raise HTTPException(status_code=400, detail="Invalid nickname")
 
         # 새 사용자 객체 생성
-        new_user = User(
-            email=user.email,
-            password=hash_password.create_hash(user.password),
-            nickname=user.nickname,
-        )
+        new_user = await self.create_new_user(user)
 
         # 추천인 코드가 있을 경우 처리
+        referrer = None
         if user.referral_code is not None:
+            # 추천인 코드로 추천인을 조회합니다.
             referrer = await self.referral_service.find_user_by_referral_code(
                 user.referral_code
             )
-        else:
-            referrer = None
 
-        # 사용자 저장
-        saved_user = await self.user_repository.save_user(user=new_user)
+            # 추천인 ID를 새로운 사용자에 설정합니다.
+            new_user.referrer_id = referrer.id
 
         # 추천인 혜택 적용 및 레몬 초기화
-        await self.referral_service.apply_referral_benefit(saved_user, referrer)
+        await self.referral_service.apply_referral_benefit(new_user, referrer)
 
-        return saved_user
+        return new_user
 
     async def update_user(
         self,
