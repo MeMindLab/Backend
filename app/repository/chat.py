@@ -106,6 +106,7 @@ class MessageRepository:
         is_from_user: bool,
         index: int,
         message: str = "",
+        message_timestamp: datetime = None,
     ):
         """메시지를 저장하는 함수"""
 
@@ -114,6 +115,7 @@ class MessageRepository:
             is_from_user=is_from_user,
             message=message,
             index=index,
+            message_timestamp=message_timestamp,
         )
         self.session.add(new_message)
         await self.session.commit()

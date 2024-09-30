@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends
-from datetime import date
+from datetime import date, datetime
 
 from app.core.dependencies import get_db
 from app.repository.chat import ConversationRepository, MessageRepository
@@ -81,6 +81,7 @@ class MessageService:
                 is_from_user=True,
                 message=user_text,
                 index=order + 1,
+                message_timestamp=datetime.utcnow(),
             )
 
             # chain에 대화 요청
@@ -92,6 +93,7 @@ class MessageService:
                 is_from_user=False,
                 message=ai_message,
                 index=order + 2,
+                message_timestamp=datetime.utcnow(),
             )
 
             # 챗봇의 답변을 사용자 메시지와 함께 반환합니다.
