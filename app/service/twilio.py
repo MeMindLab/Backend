@@ -8,7 +8,7 @@ from twilio.http.async_http_client import AsyncTwilioHttpClient
 from fastapi import HTTPException, status, Depends
 
 from app.core.config import get_config, ConfigTemplate
-from app.schemas.user import VerificationResult
+from app.schemas.user import VerificationResult, Channel
 from app.schemas.lemon import LemonUpdate
 from app.service import LemonService
 
@@ -82,7 +82,7 @@ class TwilioService:
 
             result = VerificationResult(
                 to=verification_check.to,
-                channel=verification_check.channel,
+                channel=Channel(verification_check.channel),
                 status=verification_check.status,
                 valid=verification_check.valid,
             )

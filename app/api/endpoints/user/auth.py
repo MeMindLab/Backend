@@ -62,10 +62,9 @@ async def verify_code(
 ):
     try:
         result = await twilio_service.verify_code(phone_number, code, auth)
-
-        return JSONResponse(
-            status_code=200,
-            content={"success": True, "data": {"result": result}},
+        return VerificationCheckResponse(
+            success=True,
+            data=result,
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
