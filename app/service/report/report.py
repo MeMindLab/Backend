@@ -13,6 +13,7 @@ from app.schemas.report import (
 )
 from app.utils.image import ImageUtil
 from .message_getter import MessageGetter
+from .. import LemonService
 
 
 class ReportService:
@@ -24,6 +25,7 @@ class ReportService:
         report_repository: ReportRepository = Depends(ReportRepository),
         message_getter: MessageGetter = Depends(MessageGetter),
         image_util: ImageUtil = Depends(ImageUtil),
+        lemon_service: LemonService = Depends(LemonService),
     ):
         self.keyword_extractor = keyword_extractor
         self.summary_extractor = summary_extractor
@@ -31,6 +33,7 @@ class ReportService:
         self.report_repository = report_repository
         self.message_getter = message_getter
         self.image_util = image_util
+        self.lemon_service = lemon_service
 
     async def get_daily_report(self, conversation_id: UUID) -> ReportBase:
         report = await self.report_repository.get_report_by_conversation_id(
@@ -124,7 +127,9 @@ class ReportService:
 
         return response
 
-    async def create_report(self, conversation_id: UUID) -> ReportCreateResponse:
+    async def create_report(
+        self, conversation_id: UUID, user_id: UUID
+    ) -> ReportCreateResponse:
         keywords_result = await self.keyword_extractor.get_keywords(conversation_id)
         keywords = keywords_result["keywords"]
 
@@ -146,6 +151,8 @@ class ReportService:
             report_summary_id=report_summary.id,
             conversation_id=conversation_id,
         )
+
+        await self.lemon_service.decrement_lemon_by_user_id(user_id)
 
         return ReportCreateResponse(
             report_id=report.id,

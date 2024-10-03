@@ -24,7 +24,8 @@ async def create_report(
     report_service: ReportService = Depends(),
 ):
     result = await report_service.create_report(
-        conversation_id=report_input.conversation_id
+        conversation_id=report_input.conversation_id,
+        user_id=auth,
     )
 
     return result
