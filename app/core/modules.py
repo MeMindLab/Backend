@@ -1,3 +1,5 @@
+import sentry_sdk
+
 # fastapi
 from fastapi import FastAPI
 from fastapi.middleware import Middleware
@@ -12,6 +14,8 @@ from app.core.database import SqlaEngine
 from app.models.admin import UserAdmin
 from app.api.routers.api import router
 from app.core.config import ConfigTemplate
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 
 def init_routers(app_: FastAPI, config: ConfigTemplate) -> None:
@@ -27,7 +31,16 @@ origins = [
 ]
 
 
-def make_middleware() -> List[Middleware]:
+def make_middleware(config) -> List[Middleware]:
+    sentry_sdk.init(
+        dsn=config.SENTRY_DSN,
+        enable_tracing=True,
+        traces_sample_rate=0.6,
+        integrations=[
+            LoggingIntegration(),
+        ],
+    )
+
     middleware = [
         Middleware(
             CORSMiddleware,
@@ -36,5 +49,6 @@ def make_middleware() -> List[Middleware]:
             allow_methods=["*"],
             allow_headers=["*"],
         ),
+        Middleware(SentryAsgiMiddleware),
     ]
     return middleware

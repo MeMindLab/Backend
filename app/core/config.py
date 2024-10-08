@@ -45,6 +45,7 @@ class ConfigTemplate(BaseSettings):
     SERVER_HOST: str = "http://localhost:8000"
 
     MAX_UPLOAD_IMAGE_SIZE: int = 1024 * 1024 * 10  # 10MB
+    SENTRY_DSN: str = os.environ.get("SENTRY_DSN")
 
     @property
     def db_uri(self) -> str:
