@@ -13,10 +13,9 @@ from app.exceptions.exception import ServiceException
 def create_app() -> FastAPI:
     config = get_config()
     app_ = FastAPI(
-        title="MIMIND backend",
+        title="MEMIND backend",
         description="FastAPI",
         version="1.0.0",
-        # dependencies=[Depends(Logging)],
         middleware=make_middleware(config),
     )
     init_routers(app_=app_, config=config)

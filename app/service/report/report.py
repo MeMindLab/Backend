@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import date
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 
 from app.repository.report import ReportRepository
 from app.service.report import KeywordExtractor, EmotionExtractor, SummaryExtractor
@@ -130,6 +130,15 @@ class ReportService:
     async def create_report(
         self, conversation_id: UUID, user_id: UUID
     ) -> ReportCreateResponse:
+        existing_report = await self.report_repository.get_report_by_conversation_id(
+            conversation_id
+        )
+
+        if existing_report:
+            raise HTTPException(
+                status_code=400, detail="Report already exists for this conversation"
+            )
+
         keywords_result = await self.keyword_extractor.get_keywords(conversation_id)
         keywords = keywords_result["keywords"]
 

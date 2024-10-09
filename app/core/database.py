@@ -9,9 +9,6 @@ class SqlaEngine:
         self._engine = create_async_engine(
             config.db_uri,
             echo=True,
-            pool_size=30,
-            max_overflow=20,
-            pool_timeout=30,
         )
 
     @property

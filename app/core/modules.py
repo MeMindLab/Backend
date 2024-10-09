@@ -27,7 +27,6 @@ def init_routers(app_: FastAPI, config: ConfigTemplate) -> None:
 
 origins = [
     "*",
-    # "http://localhost:8080",
 ]
 
 
