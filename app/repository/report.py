@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload, joinedload
 
 from app.models.report import Report, Tags, ReportSummary, DrawingDiary, Emotion
 from app.models.image import Image
+from app.models.chat import Conversation
 from app.core.dependencies import get_db
 
 
@@ -217,7 +218,7 @@ class ReportRepository:
 
         return results.scalars().all()
 
-    async def get_weekly_scores(self, target_date: date):
+    async def get_weekly_scores(self, target_date: date, user_id: UUID):
         start_of_week = target_date - timedelta(
             days=6
         )  # 7 days including the target_date
@@ -225,9 +226,14 @@ class ReportRepository:
 
         query = (
             select(Report)
-            .options(joinedload(Report.emotions))  # Eager load the Emotion relationship
+            .options(
+                selectinload(Report.emotions)
+            )  # Eager load the Emotion relationship
+            .join(Conversation)  # Conversation 테이블 조인
             .filter(
-                Report.created_at >= start_of_week, Report.created_at <= end_of_week
+                Report.created_at >= start_of_week,
+                Report.created_at <= end_of_week,
+                Conversation.user_id == user_id,  # 사용자 ID 필터링
             )
             .order_by(Report.created_at)
         )

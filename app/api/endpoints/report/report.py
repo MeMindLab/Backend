@@ -118,8 +118,9 @@ async def weekly_scores_handler(
         datetime.utcnow().date(), description="Date in YYYY-MM-DD format"
     ),
     report_service: ReportService = Depends(),
+    auth: UUID = Depends(get_current_user),
 ):
-    results = await report_service.get_weekly_scores(target_date)
+    results = await report_service.get_weekly_scores(target_date, auth)
     return WeeklyScoresResponse(results=results)
 
 

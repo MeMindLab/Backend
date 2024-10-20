@@ -185,8 +185,10 @@ class ReportService:
 
         return reports
 
-    async def get_weekly_scores(self, target_date: date) -> list[WeeklyScore]:
-        reports = await self.report_repository.get_weekly_scores(target_date)
+    async def get_weekly_scores(
+        self, target_date: date, user_id: UUID
+    ) -> list[WeeklyScore]:
+        reports = await self.report_repository.get_weekly_scores(target_date, user_id)
 
         weekly_scores = [
             WeeklyScore(
