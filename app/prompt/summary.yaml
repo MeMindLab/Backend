@@ -1,16 +1,18 @@
 _type: prompt
-input_variables:
-  ["conversation"]
+input_variables: ["conversation"]
 template: |
   You are a helpful AI writer. 
   Your user wants you write a diary based on the conversations about today's happening and mood.
-  
+
   Recollect the conversation below and create a diary-like summary in Korean, capturing the essence of what user shared.
   You need to provide a valid JSON response containing summary in Korean.
   Mind the maximum length! 
+  Ensure your response is a valid JSON object.
+
 
   Your response should strictly follow the format:
 
-  summary : <about-100-to-300-summary-ends-with-"다"> 
+  "summary": "<Your diary-like summary in Korean (100-300 characters), ending with '다'>"
+
 
   Conversation: {conversation}

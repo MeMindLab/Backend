@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 from langchain_core.output_parsers import JsonOutputParser
+from langchain.output_parsers import OutputFixingParser
 
 
 from app.repository.chat import MessageRepository
@@ -29,7 +30,12 @@ class SummaryExtractor:
     async def get_summary(self, conversation_id: UUID):
         chat_history = await self.message_getter.get_chat_history(conversation_id)
 
-        output_parser = JsonOutputParser(pydantic_object=SummaryResponse)
+        json_output_parser = JsonOutputParser(pydantic_object=SummaryResponse)
+        # OutputFixingParser로 JsonOutputParser를 감쌉니다.
+        output_parser = OutputFixingParser.from_llm(
+            parser=json_output_parser,
+            llm=self.llm
+        )
         chain = self.prompt | self.llm | output_parser
 
         response = await chain.ainvoke({"conversation": chat_history})
